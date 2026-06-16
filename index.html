@@ -541,7 +541,7 @@ textarea { resize: vertical; min-height: 70px; }
 </div>
 
 <!-- ─── LOGIN ─────────────────────────────────────────── -->
-<div id="login" class="hidden">
+<div id="login" style="display:none">
   <div class="auth-card">
     <div class="auth-heading">
       <div class="auth-title">Учёт финансов</div>
@@ -572,7 +572,7 @@ textarea { resize: vertical; min-height: 70px; }
 </div>
 
 <!-- ─── APP ───────────────────────────────────────────── -->
-<div id="app">
+<div id="app" style="display:none">
 
   <div class="hdr">
     <div class="hdr-top">
@@ -770,9 +770,9 @@ async function boot() {
 }
 
 function show(screen) {
-  document.getElementById('setup').style.display = screen==='setup' ? 'flex' : 'none';
-  cl('login',   screen!=='login');
-  document.getElementById('app').style.display = screen==='app' ? '' : 'none';
+  document.getElementById('setup').style.display = screen==='setup' ? 'flex'  : 'none';
+  document.getElementById('login').style.display = screen==='login' ? 'flex'  : 'none';
+  document.getElementById('app').style.display   = screen==='app'   ? 'block' : 'none';
 }
 
 function mountApp() {
