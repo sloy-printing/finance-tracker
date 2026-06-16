@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Финансы</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:        #0f1b2d;
+  --navy:       #1a3055;
+  --surface:    #ffffff;
+  --ground:     #f1f5f9;
+  --border:     #dde3ed;
+  --text:       #1a2536;
+  --muted:      #64748b;
+  --income:     #0d6e35;
+  --income-bg:  #eafaf2;
+  --income-acc: #22c55e;
+  --expense:    #b91c1c;
+  --expense-bg: #fef2f2;
+  --split:      #5b21b6;
+  --split-bg:   #f5f3ff;
+  --blue:       #1d4ed8;
+  --r:          10px;
+  --r-sm:       7px;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--ground);
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── SETUP OVERLAY ─────────────────────────────────── */
+#setup {
+  position: fixed; inset: 0; z-index: 900;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+
+/* ─── LOGIN ──────────────────────────────────────────── */
+#login {
+  min-height: 100vh;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+
+.auth-card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 36px 28px;
+  width: 100%; max-width: 400px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+}
+
+.auth-heading {
+  margin-bottom: 28px;
+}
+
+.auth-title {
+  font-size: 21px; font-weight: 800;
+  color: var(--ink); letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+.auth-sub {
+  font-size: 13px; color: var(--muted);
+  margin-top: 5px;
+}
+
+.error-box {
+  background: var(--expense-bg);
+  border: 1px solid #fecaca;
+  color: var(--expense);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  font-size: 13px; font-weight: 500;
+  margin-bottom: 16px;
+  display: none;
+}
+
+/* ─── FORMS ──────────────────────────────────────────── */
+.fg { margin-bottom: 14px; }
+
+label {
+  display: block;
+  font-size: 11px; font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--ground);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-appearance: none; appearance: none;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--navy);
+  background: var(--surface);
+}
+
+textarea { resize: vertical; min-height: 70px; }
+
+.sw { position: relative; }
+.sw::after {
+  content: '▾';
+  position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none; color: var(--muted); font-size: 13px;
+}
+
+/* ─── BUTTONS ────────────────────────────────────────── */
+.btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 13px 20px;
+  font-size: 15px; font-weight: 700;
+  border: none; border-radius: var(--r-sm);
+  cursor: pointer; font-family: inherit;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: -0.1px;
+}
+
+.btn:active { opacity: 0.82; transform: scale(0.985); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+
+.btn-ink     { background: var(--ink);    color: #fff; }
+.btn-income  { background: var(--income); color: #fff; }
+.btn-expense { background: var(--expense);color: #fff; }
+
+.btn-ghost {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--muted); font-size: 13px;
+  padding: 9px 16px; width: auto;
+}
+
+.btn-ghost-danger {
+  background: transparent;
+  border: 1.5px solid var(--expense);
+  color: var(--expense); font-size: 13px;
+  padding: 9px 16px; width: auto;
+}
+
+/* ─── APP SHELL ──────────────────────────────────────── */
+#app { display: none; }
+
+/* ─── HEADER ─────────────────────────────────────────── */
+.hdr {
+  background: var(--ink);
+  color: #fff;
+  padding: 14px 18px 0;
+  position: sticky; top: 0; z-index: 100;
+}
+
+.hdr-top {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.hdr-brand {
+  font-size: 15px; font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.hdr-right {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.hdr-user {
+  font-size: 12px; opacity: 0.5; font-weight: 600;
+}
+
+.hdr-logout {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; font-size: 12px; font-weight: 600;
+  padding: 5px 11px; border-radius: 5px;
+  cursor: pointer; font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+
+.hdr-logout:hover { background: rgba(255,255,255,0.18); }
+
+.bal-row {
+  display: flex;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.bal-cell {
+  flex: 1;
+  padding: 10px 0 12px 14px;
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+
+.bal-cell:last-child { border-right: none; }
+
+.bal-lbl {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  opacity: 0.45; margin-bottom: 3px;
+}
+
+.bal-val {
+  font-size: 16px; font-weight: 800;
+  letter-spacing: -0.4px;
+}
+
+.bal-val.g  { color: var(--income-acc); }
+.bal-val.r  { color: #f87171; }
+.bal-val.w  { color: #fff; }
+
+/* ─── TABS ───────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 104px;
+  z-index: 99;
+}
+
+.tab {
+  flex: 1; padding: 12px 8px;
+  font-size: 13px; font-weight: 600;
+  text-align: center; border: none;
+  border-bottom: 2.5px solid transparent;
+  color: var(--muted); background: none;
+  font-family: inherit; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab.on { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* ─── CONTENT ────────────────────────────────────────── */
+.pg {
+  padding: 14px 14px 32px;
+  max-width: 680px; margin: 0 auto;
+}
+
+/* ─── CARDS ──────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  padding: 18px;
+  margin-bottom: 10px;
+}
+
+.card-ttl {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--muted); margin-bottom: 14px;
+}
+
+/* ─── SEGMENT ────────────────────────────────────────── */
+.seg {
+  display: flex;
+  background: var(--ground);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 3px; gap: 3px; margin-bottom: 10px;
+}
+
+.seg-btn {
+  flex: 1; padding: 10px 8px;
+  font-size: 14px; font-weight: 700;
+  border: none; border-radius: 5px;
+  cursor: pointer; background: transparent;
+  color: var(--muted); font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+
+.seg-btn.s-in  { background: var(--income);  color: #fff; }
+.seg-btn.s-ex  { background: var(--expense); color: #fff; }
+
+/* ─── PERIOD CHIPS ───────────────────────────────────── */
+.chips {
+  display: flex; flex-wrap: wrap; gap: 7px;
+  margin-bottom: 10px;
+}
+
+.chip {
+  padding: 7px 13px; font-size: 13px; font-weight: 600;
+  border-radius: 20px; border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--muted);
+  cursor: pointer; font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+
+.chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+.range-row {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+.range-row input { flex: 1; min-width: 130px; }
+.range-sep { color: var(--muted); font-size: 13px; flex-shrink: 0; }
+
+/* ─── REPORT ─────────────────────────────────────────── */
+.sum-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-bottom: 10px;
+}
+
+.scard {
+  border-radius: var(--r-sm); padding: 14px;
+}
+
+.scard.si { background: var(--income-bg);  border: 1px solid #a7f3c1; }
+.scard.se { background: var(--expense-bg); border: 1px solid #fecaca; }
+.scard.sp { background: #eff6ff; border: 1px solid #bfdbfe; }
+.scard.ss { background: var(--split-bg);   border: 1px solid #ddd6fe; }
+
+.scard-lbl {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  margin-bottom: 5px;
+}
+
+.si .scard-lbl, .si .scard-val { color: var(--income); }
+.se .scard-lbl, .se .scard-val { color: var(--expense); }
+.sp .scard-lbl, .sp .scard-val { color: var(--blue); }
+.ss .scard-lbl, .ss .scard-val { color: var(--split); }
+
+.scard-val {
+  font-size: 19px; font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+/* Profit bar */
+.profit-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px;
+}
+
+.profit-lbl {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--muted);
+}
+
+.profit-val {
+  font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+}
+
+/* Split section */
+.split-block {
+  background: var(--split-bg);
+  border: 1px solid #ddd6fe;
+  border-radius: var(--r-sm);
+  padding: 14px 16px; margin-bottom: 10px;
+}
+
+.split-hdr {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--split); margin-bottom: 10px;
+}
+
+.split-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid #ede9fe;
+}
+
+.split-row:last-child { border-bottom: none; }
+.split-name { font-size: 14px; font-weight: 600; }
+.split-amt  { font-size: 15px; font-weight: 800; color: var(--split); }
+
+/* Category table */
+.cat-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.cat-row:last-child { border-bottom: none; }
+.cat-name { font-size: 14px; color: var(--text); }
+.cat-amt  { font-size: 14px; font-weight: 700; color: var(--expense); }
+
+/* TX rows */
+.tx {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.tx:last-child { border-bottom: none; }
+
+.tx-mark {
+  width: 30px; height: 30px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+}
+
+.tx-mark.i { background: var(--income-bg);  color: var(--income); }
+.tx-mark.e { background: var(--expense-bg); color: var(--expense); }
+
+.tx-info { flex: 1; min-width: 0; }
+
+.tx-name {
+  font-size: 14px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.tx-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.tx-amt {
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+  letter-spacing: -0.3px;
+}
+.tx-amt.i { color: var(--income); }
+.tx-amt.e { color: var(--expense); }
+
+.del {
+  background: none; border: none;
+  color: var(--border); font-size: 15px;
+  cursor: pointer; padding: 4px 5px; border-radius: 4px;
+  flex-shrink: 0; font-family: inherit;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.del:hover { color: var(--expense); }
+
+/* ─── SETTINGS ───────────────────────────────────────── */
+.info-block {
+  font-size: 13px; line-height: 1.7; color: var(--muted);
+  margin-bottom: 14px;
+}
+
+/* ─── STATES ─────────────────────────────────────────── */
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 40px;
+  color: var(--muted); font-size: 13px;
+}
+
+.spinner {
+  width: 17px; height: 17px;
+  border: 2px solid var(--border);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty {
+  text-align: center; padding: 48px 20px;
+  font-size: 13px; color: var(--muted);
+}
+
+/* ─── TOAST ──────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink); color: #fff;
+  padding: 10px 20px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  z-index: 9999; white-space: nowrap;
+  transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ─── UTILS ──────────────────────────────────────────── */
+.hidden { display: none !important; }
+.period-info { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+.conn-status {
+  margin-top: 12px; font-size: 13px; display: flex;
+  align-items: center; gap: 6px;
+}
+
+.dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.dot-g { background: var(--income); }
+.dot-r { background: var(--expense); }
+
+/* ─── RESPONSIVE ─────────────────────────────────────── */
+@media (min-width: 480px) {
+  .pg { padding: 16px 18px 32px; }
+  .bal-val { font-size: 18px; }
+}
+
+@media (min-width: 640px) {
+  .pg { padding: 20px 22px 40px; }
+  .hdr { padding: 16px 24px 0; }
+  .tabs { top: 108px; }
+  .sum-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 768px) {
+  .hdr { padding: 18px 32px 0; }
+  .tabs { top: 114px; }
+  .pg { padding: 24px; }
+  .bal-val { font-size: 20px; }
+  .hdr-brand { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── SETUP OVERLAY ─────────────────────────────────── -->
+<div id="setup">
+  <div class="auth-card">
+    <div class="auth-heading">
+      <div class="auth-title">Первичная настройка</div>
+      <div class="auth-sub">Вставьте URL вашего Google Apps Script. Это нужно сделать один раз на каждом устройстве.</div>
+    </div>
+    <div class="fg">
+      <label>URL скрипта</label>
+      <input type="url" id="setupUrl" placeholder="https://script.google.com/macros/s/...">
+    </div>
+    <button class="btn btn-ink" onclick="saveSetup()">Сохранить и продолжить</button>
+  </div>
+</div>
+
+<!-- ─── LOGIN ─────────────────────────────────────────── -->
+<div id="login" class="hidden">
+  <div class="auth-card">
+    <div class="auth-heading">
+      <div class="auth-title">Учёт финансов</div>
+      <div class="auth-sub">Вход только для авторизованных пользователей</div>
+    </div>
+    <div class="error-box" id="loginErr"></div>
+    <div class="fg">
+      <label>Пользователь</label>
+      <div class="sw">
+        <select id="loginUser">
+          <option value="">— выберите —</option>
+          <option value="olga">Ольга</option>
+          <option value="evgeny">Евгений</option>
+          <option value="dmitry">Дмитрий</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Пароль</label>
+      <input type="password" id="loginPass" placeholder="Введите пароль"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-ink" id="loginBtn" onclick="doLogin()">Войти</button>
+    <div style="text-align:center;margin-top:14px;">
+      <button class="btn-ghost btn" style="font-size:12px;" onclick="openSetup()">Изменить адрес скрипта</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── APP ───────────────────────────────────────────── -->
+<div id="app">
+
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="hdr-brand">Учёт финансов</div>
+      <div class="hdr-right">
+        <span class="hdr-user" id="hdrUser"></span>
+        <button class="hdr-logout" onclick="doLogout()">Выйти</button>
+      </div>
+    </div>
+    <div class="bal-row">
+      <div class="bal-cell">
+        <div class="bal-lbl">Приход</div>
+        <div class="bal-val g" id="hIncome">—</div>
+      </div>
+      <div class="bal-cell">
+        <div class="bal-lbl">Расход</div>
+        <div class="bal-val r" id="hExpense">—</div>
+      </div>
+      <div class="bal-cell">
+        <div class="bal-lbl">Прибыль</div>
+        <div class="bal-val w" id="hProfit">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="goTab('add')">Добавить</button>
+    <button class="tab"    onclick="goTab('report')">Отчёт</button>
+    <button class="tab"    onclick="goTab('settings')">Настройки</button>
+  </div>
+
+  <!-- ── TAB: ADD ── -->
+  <div id="tAdd" class="pg">
+    <div class="seg">
+      <button class="seg-btn s-in" id="sIn"  onclick="setMode('income')">Приход</button>
+      <button class="seg-btn"      id="sEx"  onclick="setMode('expense')">Расход</button>
+    </div>
+
+    <!-- Income -->
+    <div class="card" id="fIncome">
+      <div class="card-ttl">Новый приход</div>
+      <div class="fg">
+        <label>Сумма, руб.</label>
+        <input type="number" id="iAmt" placeholder="0.00" inputmode="decimal" min="0" step="0.01">
+      </div>
+      <div class="fg">
+        <label>Контрагент</label>
+        <input type="text" id="iCpty" placeholder="Название или имя">
+      </div>
+      <div class="fg">
+        <label>Дата</label>
+        <input type="date" id="iDate">
+      </div>
+      <div class="fg">
+        <label>Комментарий</label>
+        <textarea id="iNote" placeholder="Необязательно"></textarea>
+      </div>
+      <button class="btn btn-income" onclick="addIncome()">Сохранить приход</button>
+    </div>
+
+    <!-- Expense -->
+    <div class="card hidden" id="fExpense">
+      <div class="card-ttl">Новый расход</div>
+      <div class="fg">
+        <label>Сумма, руб.</label>
+        <input type="number" id="eAmt" placeholder="0.00" inputmode="decimal" min="0" step="0.01">
+      </div>
+      <div class="fg">
+        <label>Дата</label>
+        <input type="date" id="eDate">
+      </div>
+      <div class="fg">
+        <label>Статья расхода</label>
+        <div class="sw">
+          <select id="eCat" onchange="onCat()">
+            <option value="">— выберите —</option>
+            <option value="materials">Материалы</option>
+            <option value="equipment">Оборудование</option>
+            <option value="rent">Аренда</option>
+            <option value="regular">Регулярные платежи</option>
+            <option value="taxes">Налоги</option>
+            <option value="other_general">Остальное</option>
+            <option value="other_split">Другое</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg hidden" id="fPerson">
+        <label>Получатель</label>
+        <div class="sw">
+          <select id="ePerson">
+            <option value="">— выберите —</option>
+            <option value="evgeny">Евгений</option>
+            <option value="dmitry">Дмитрий</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Комментарий</label>
+        <textarea id="eNote" placeholder="Необязательно"></textarea>
+      </div>
+      <button class="btn btn-expense" onclick="addExpense()">Сохранить расход</button>
+    </div>
+  </div>
+
+  <!-- ── TAB: REPORT ── -->
+  <div id="tReport" class="pg hidden">
+    <div class="card" style="padding:14px 16px;">
+      <div class="chips">
+        <button class="chip on" id="cM"  onclick="setPeriod('month')">Месяц</button>
+        <button class="chip"    id="cQ"  onclick="setPeriod('quarter')">Квартал</button>
+        <button class="chip"    id="cY"  onclick="setPeriod('year')">Год</button>
+        <button class="chip"    id="cC"  onclick="setPeriod('custom')">Свободно</button>
+      </div>
+      <div class="range-row hidden" id="rangeRow">
+        <input type="date" id="rFrom">
+        <span class="range-sep">—</span>
+        <input type="date" id="rTo">
+        <button class="btn btn-ink" onclick="loadReport()"
+          style="width:auto;padding:10px 16px;font-size:13px;">ОК</button>
+      </div>
+      <div class="period-info" id="pLabel"></div>
+    </div>
+    <div id="repContent">
+      <div class="loading"><div class="spinner"></div> Загрузка...</div>
+    </div>
+  </div>
+
+  <!-- ── TAB: SETTINGS ── -->
+  <div id="tSettings" class="pg hidden">
+
+    <div class="card">
+      <div class="card-ttl">Подключение</div>
+      <div class="info-block">URL веб-приложения Google Apps Script. Хранится только на этом устройстве в localStorage.</div>
+      <div class="fg">
+        <label>URL скрипта</label>
+        <input type="url" id="sUrl" placeholder="https://script.google.com/macros/s/...">
+      </div>
+      <button class="btn btn-ink" onclick="saveSettings()" style="margin-bottom:10px;">Сохранить</button>
+      <button class="btn-ghost btn" onclick="testConn()" style="margin-top:8px;">Проверить подключение</button>
+      <div class="conn-status hidden" id="connSt"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">Сессия</div>
+      <div class="info-block">
+        Сессия действует 8 часов с момента входа. После закрытия вкладки — до следующего входа.
+      </div>
+      <button class="btn-ghost-danger btn" onclick="doLogout()">Выйти из аккаунта</button>
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">О приложении</div>
+      <div class="info-block" style="margin:0;">
+        Данные хранятся в Google Sheets.<br>
+        Хостинг: GitHub Pages.<br>
+        Пользователи: Ольга, Евгений, Дмитрий.
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let SCRIPT_URL   = localStorage.getItem('fin_url')   || '';
+let TOKEN        = sessionStorage.getItem('fin_tok')  || '';
+let CUR_USER     = sessionStorage.getItem('fin_user') || '';
+let curPeriod    = 'month';
+let curMode      = 'income';
+
+const USER_LABELS = { olga:'Ольга', evgeny:'Евгений', dmitry:'Дмитрий' };
+const CAT_LABELS  = {
+  materials:'Материалы', equipment:'Оборудование', rent:'Аренда',
+  regular:'Регулярные платежи', taxes:'Налоги',
+  other_general:'Остальное', other_split:'Другое',
+};
+
+// ═══════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════
+async function boot() {
+  if (!SCRIPT_URL) { show('setup'); return; }
+
+  if (TOKEN && CUR_USER) {
+    const r = await api({ action:'ping', token:TOKEN });
+    if (r && r.success) { mountApp(); return; }
+    clearSession();
+  }
+  show('login');
+}
+
+function show(screen) {
+  document.getElementById('setup').style.display = screen==='setup' ? 'flex' : 'none';
+  cl('login',   screen!=='login');
+  document.getElementById('app').style.display = screen==='app' ? '' : 'none';
+}
+
+function mountApp() {
+  show('app');
+  document.getElementById('hdrUser').textContent = USER_LABELS[CUR_USER] || CUR_USER;
+  const td = today();
+  document.getElementById('iDate').value = td;
+  document.getElementById('eDate').value = td;
+  const [f] = periodDates();
+  document.getElementById('rFrom').value = f;
+  document.getElementById('rTo').value   = td;
+  setPLabel();
+  refreshHdr();
+}
+
+// ═══════════════════════════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════════════════════════
+function saveSetup() {
+  const v = document.getElementById('setupUrl').value.trim();
+  if (!v || !v.startsWith('https://')) { toast('Введите корректный URL'); return; }
+  SCRIPT_URL = v;
+  localStorage.setItem('fin_url', SCRIPT_URL);
+  show('login');
+}
+
+function openSetup() {
+  document.getElementById('setupUrl').value = SCRIPT_URL;
+  show('setup');
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════
+async function doLogin() {
+  const user = document.getElementById('loginUser').value;
+  const pass = document.getElementById('loginPass').value;
+  if (!user) { setErr('Выберите пользователя'); return; }
+  if (!pass) { setErr('Введите пароль'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.textContent = 'Вход...'; btn.disabled = true;
+  hideErr();
+
+  const r = await api({ action:'login', username:user, password:pass });
+
+  btn.textContent = 'Войти'; btn.disabled = false;
+
+  if (!r)           { setErr('Нет ответа от скрипта. Проверьте URL.'); return; }
+  if (r.error)      { setErr(r.error); return; }
+  if (r.success) {
+    TOKEN    = r.token;
+    CUR_USER = r.username;
+    sessionStorage.setItem('fin_tok',  TOKEN);
+    sessionStorage.setItem('fin_user', CUR_USER);
+    document.getElementById('loginPass').value = '';
+    mountApp();
+  }
+}
+
+function doLogout() {
+  clearSession();
+  show('login');
+  toast('Вы вышли из аккаунта');
+}
+
+function clearSession() {
+  TOKEN = ''; CUR_USER = '';
+  sessionStorage.removeItem('fin_tok');
+  sessionStorage.removeItem('fin_user');
+}
+
+function setErr(m) {
+  const e = document.getElementById('loginErr');
+  e.textContent = m; e.style.display = 'block';
+}
+function hideErr() { document.getElementById('loginErr').style.display='none'; }
+
+// ═══════════════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════════════
+async function api(data) {
+  if (!SCRIPT_URL) return null;
+  try {
+    const r = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      redirect: 'follow'
+    });
+    const j = await r.json();
+    if (j.auth === false) {
+      clearSession(); show('login');
+      toast('Сессия истекла, войдите снова');
+      return null;
+    }
+    return j;
+  } catch(e) {
+    console.error(e);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════
+function goTab(t) {
+  ['add','report','settings'].forEach((x,i) => {
+    cl('t'+cap(x), x!==t);
+    document.querySelectorAll('.tab')[i].classList.toggle('on', x===t);
+  });
+  if (t==='report')   loadReport();
+  if (t==='settings') document.getElementById('sUrl').value = SCRIPT_URL;
+}
+
+function cap(s) { return s[0].toUpperCase()+s.slice(1); }
+function cl(id, hide) { document.getElementById(id).classList.toggle('hidden', hide); }
+
+// ═══════════════════════════════════════════════════════════
+// MODE
+// ═══════════════════════════════════════════════════════════
+function setMode(m) {
+  curMode = m;
+  document.getElementById('sIn').className  = 'seg-btn' + (m==='income'  ? ' s-in' : '');
+  document.getElementById('sEx').className  = 'seg-btn' + (m==='expense' ? ' s-ex' : '');
+  cl('fIncome',  m!=='income');
+  cl('fExpense', m!=='expense');
+}
+
+function onCat() {
+  cl('fPerson', document.getElementById('eCat').value !== 'other_split');
+}
+
+// ═══════════════════════════════════════════════════════════
+// SAVE
+// ═══════════════════════════════════════════════════════════
+async function addIncome() {
+  const amt  = parseFloat(document.getElementById('iAmt').value);
+  const cpty = document.getElementById('iCpty').value.trim();
+  const date = document.getElementById('iDate').value;
+  const note = document.getElementById('iNote').value.trim();
+
+  if (!amt || amt<=0)  { toast('Введите сумму'); return; }
+  if (!cpty)           { toast('Укажите контрагента'); return; }
+  if (!date)           { toast('Укажите дату'); return; }
+
+  const btn = document.querySelector('#fIncome .btn');
+  setBtn(btn, 'Сохранение...', true);
+
+  const r = await api({ action:'add', token:TOKEN, type:'income', amount:amt, date, counterparty:cpty, comment:note });
+
+  setBtn(btn, 'Сохранить приход', false);
+
+  if (r?.success) {
+    toast('Приход сохранён');
+    document.getElementById('iAmt').value  = '';
+    document.getElementById('iCpty').value = '';
+    document.getElementById('iDate').value = today();
+    document.getElementById('iNote').value = '';
+    refreshHdr();
+  } else {
+    toast('Ошибка: ' + (r?.error || 'нет связи'));
+  }
+}
+
+async function addExpense() {
+  const amt    = parseFloat(document.getElementById('eAmt').value);
+  const date   = document.getElementById('eDate').value;
+  const cat    = document.getElementById('eCat').value;
+  const person = document.getElementById('ePerson').value;
+  const note   = document.getElementById('eNote').value.trim();
+
+  if (!amt || amt<=0)                 { toast('Введите сумму'); return; }
+  if (!date)                          { toast('Укажите дату'); return; }
+  if (!cat)                           { toast('Выберите статью расхода'); return; }
+  if (cat==='other_split' && !person) { toast('Выберите получателя'); return; }
+
+  const btn = document.querySelector('#fExpense .btn');
+  setBtn(btn, 'Сохранение...', true);
+
+  const r = await api({
+    action:'add', token:TOKEN, type:'expense',
+    amount:amt, date, category:cat,
+    split_person: cat==='other_split' ? person : null,
+    comment: note
+  });
+
+  setBtn(btn, 'Сохранить расход', false);
+
+  if (r?.success) {
+    toast('Расход сохранён');
+    document.getElementById('eAmt').value    = '';
+    document.getElementById('eDate').value   = today();
+    document.getElementById('eCat').value    = '';
+    document.getElementById('ePerson').value = '';
+    document.getElementById('eNote').value   = '';
+    cl('fPerson', true);
+    refreshHdr();
+  } else {
+    toast('Ошибка: ' + (r?.error || 'нет связи'));
+  }
+}
+
+function setBtn(btn, txt, dis) { btn.textContent=txt; btn.disabled=dis; }
+
+// ═══════════════════════════════════════════════════════════
+// PERIOD
+// ═══════════════════════════════════════════════════════════
+function setPeriod(p) {
+  curPeriod = p;
+  ['M','Q','Y','C'].forEach((x,i)=>{
+    document.getElementById('c'+x).classList.toggle('on', ['month','quarter','year','custom'][i]===p);
+  });
+  cl('rangeRow', p!=='custom');
+  setPLabel();
+  if (p!=='custom') loadReport();
+}
+
+function periodDates() {
+  const now = new Date(), yy=now.getFullYear(), mm=now.getMonth(), td=today();
+  if (curPeriod==='month')   return [`${yy}-${pad(mm+1)}-01`, td];
+  if (curPeriod==='quarter') { const q=Math.floor(mm/3); return [`${yy}-${pad(q*3+1)}-01`, td]; }
+  if (curPeriod==='year')    return [`${yy}-01-01`, td];
+  return [document.getElementById('rFrom').value, document.getElementById('rTo').value];
+}
+
+function setPLabel() {
+  const [f,t] = periodDates();
+  if(f&&t) document.getElementById('pLabel').textContent = `${fdate(f)} — ${fdate(t)}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// REPORT
+// ═══════════════════════════════════════════════════════════
+async function loadReport() {
+  const [from, to] = periodDates();
+  if (!from || !to) { toast('Выберите даты'); return; }
+  setPLabel();
+
+  const box = document.getElementById('repContent');
+  box.innerHTML = '<div class="loading"><div class="spinner"></div> Загрузка...</div>';
+
+  const r = await api({ action:'list', token:TOKEN, from, to });
+
+  if (!r || r.error) {
+    box.innerHTML = `<div class="empty">${r?.error || 'Ошибка загрузки данных'}</div>`;
+    return;
+  }
+
+  const rows = r.rows || [];
+  if (!rows.length) {
+    box.innerHTML = '<div class="empty">Нет операций за этот период</div>';
+    setHdr(0,0); return;
+  }
+
+  const inc  = rows.filter(x=>x.type==='income');
+  const exp  = rows.filter(x=>x.type==='expense');
+  const main = exp.filter(x=>x.category!=='other_split');
+  const spl  = exp.filter(x=>x.category==='other_split');
+
+  const tInc  = sum(inc);
+  const tMain = sum(main);
+  const tSpl  = sum(spl);
+  const tExp  = tMain + tSpl;
+  const prof  = tInc - tExp;
+  setHdr(tInc, tExp);
+
+  const evg = sum(spl.filter(x=>x.split_person==='evgeny'));
+  const dmt = sum(spl.filter(x=>x.split_person==='dmitry'));
+
+  const catMap = {};
+  main.forEach(x=>{ catMap[x.category]=(catMap[x.category]||0)+ +x.amount; });
+
+  let h = '';
+
+  // Summary grid
+  h += `<div class="sum-grid">
+    <div class="scard si"><div class="scard-lbl">Приход</div><div class="scard-val">${fmt(tInc)} р.</div></div>
+    <div class="scard se"><div class="scard-lbl">Расход (основной)</div><div class="scard-val">${fmt(tMain)} р.</div></div>
+  </div>`;
+
+  // Profit
+  const pc = prof>=0 ? 'var(--income)' : 'var(--expense)';
+  h += `<div class="profit-bar">
+    <div class="profit-lbl">Чистая прибыль</div>
+    <div class="profit-val" style="color:${pc}">${prof>=0?'+':''}${fmt(prof)} руб.</div>
+  </div>`;
+
+  // Split block
+  if (tSpl > 0) {
+    h += `<div class="split-block">
+      <div class="split-hdr">Другое — личные выплаты</div>
+      ${evg>0?`<div class="split-row"><span class="split-name">Евгений</span><span class="split-amt">${fmt(evg)} р.</span></div>`:''}
+      ${dmt>0?`<div class="split-row"><span class="split-name">Дмитрий</span><span class="split-amt">${fmt(dmt)} р.</span></div>`:''}
+      <div class="split-row">
+        <span class="split-name" style="color:var(--muted)">Итого</span>
+        <span class="split-amt">${fmt(tSpl)} р.</span>
+      </div>
+    </div>`;
+  }
+
+  // Category breakdown
+  if (Object.keys(catMap).length) {
+    h += `<div class="card"><div class="card-ttl">По статьям расходов</div>`;
+    Object.entries(catMap).sort((a,b)=>b[1]-a[1]).forEach(([cat,s])=>{
+      h += `<div class="cat-row"><span class="cat-name">${CAT_LABELS[cat]||cat}</span><span class="cat-amt">${fmt(s)} р.</span></div>`;
+    });
+    h += `</div>`;
+  }
+
+  // Income list
+  if (inc.length) {
+    h += `<div class="card"><div class="card-ttl">Приходы (${inc.length})</div>`;
+    inc.forEach(x=>{ h+=txRow(x,'income'); });
+    h += `</div>`;
+  }
+
+  // Expense list
+  if (exp.length) {
+    h += `<div class="card"><div class="card-ttl">Расходы (${exp.length})</div>`;
+    exp.forEach(x=>{ h+=txRow(x,'expense'); });
+    h += `</div>`;
+  }
+
+  box.innerHTML = h;
+}
+
+function txRow(r, type) {
+  const isInc = type==='income';
+  const mark  = isInc ? '+' : '−';
+  const cls   = isInc ? 'i' : 'e';
+  const name  = isInc
+    ? esc(r.counterparty||'—')
+    : esc((CAT_LABELS[r.category]||r.category)+(r.split_person ? ` — ${USER_LABELS[r.split_person]||r.split_person}` : ''));
+  const meta  = [fdate(r.date), r.comment ? esc(r.comment) : ''].filter(Boolean).join(' · ');
+
+  return `<div class="tx">
+    <div class="tx-mark ${cls}">${mark}</div>
+    <div class="tx-info">
+      <div class="tx-name">${name}</div>
+      <div class="tx-meta">${meta}</div>
+    </div>
+    <div class="tx-amt ${cls}">${isInc?'+':'−'}${fmt(r.amount)} р.</div>
+    <button class="del" onclick="delTx('${r.id}')">✕</button>
+  </div>`;
+}
+
+async function delTx(id) {
+  if (!confirm('Удалить запись?')) return;
+  const r = await api({ action:'delete', token:TOKEN, id });
+  if (r?.success) { toast('Запись удалена'); loadReport(); refreshHdr(); }
+  else toast('Ошибка удаления');
+}
+
+// ═══════════════════════════════════════════════════════════
+// HEADER BALANCE
+// ═══════════════════════════════════════════════════════════
+async function refreshHdr() {
+  const [from, to] = periodDates();
+  if (!from || !to) return;
+  const r = await api({ action:'list', token:TOKEN, from, to });
+  if (!r?.rows) return;
+  setHdr(
+    sum(r.rows.filter(x=>x.type==='income')),
+    sum(r.rows.filter(x=>x.type==='expense'))
+  );
+}
+
+function setHdr(inc, exp) {
+  const p = inc-exp;
+  document.getElementById('hIncome').textContent  = fmt(inc)+' р.';
+  document.getElementById('hExpense').textContent = fmt(exp)+' р.';
+  document.getElementById('hProfit').textContent  = (p>=0?'+':'')+fmt(p)+' р.';
+  document.getElementById('hProfit').style.color  = p>=0 ? 'var(--income-acc)' : '#f87171';
+}
+
+// ═══════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════
+function saveSettings() {
+  const v = document.getElementById('sUrl').value.trim();
+  if (!v) { toast('Введите URL'); return; }
+  SCRIPT_URL = v;
+  localStorage.setItem('fin_url', SCRIPT_URL);
+  toast('Настройки сохранены');
+}
+
+async function testConn() {
+  const el = document.getElementById('connSt');
+  el.classList.remove('hidden');
+  el.innerHTML = '<div class="spinner" style="width:14px;height:14px;"></div> Проверяю...';
+  const r = await api({ action:'ping', token:TOKEN });
+  if (r?.success) {
+    el.innerHTML = '<div class="dot dot-g"></div> Подключено';
+    el.style.color = 'var(--income)';
+  } else {
+    el.innerHTML = '<div class="dot dot-r"></div> ' + (r?.error||'Нет ответа');
+    el.style.color = 'var(--expense)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+function today()   { return new Date().toISOString().slice(0,10); }
+function pad(n)    { return String(n).padStart(2,'0'); }
+function sum(arr)  { return arr.reduce((s,x)=>s+ +x.amount,0); }
+function fmt(n)    { return Number(n).toLocaleString('ru-RU',{maximumFractionDigits:2}); }
+function fdate(s)  { if(!s) return ''; const[y,m,d]=String(s).split('-'); return `${d}.${m}.${y}`; }
+function esc(s)    { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function toast(m, ms=2400) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), ms);
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>
