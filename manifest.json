@@ -1,11 +1,19 @@
 {
-  "name": "Учёт финансов",
-  "short_name": "Финансы",
-  "start_url": "/",
+  "name": "SLOY: Учёт финансов",
+  "short_name": "SLOY Финансы",
+  "description": "Учёт доходов и расходов",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0f1b2d",
   "theme_color": "#0f1b2d",
   "icons": [
-    { "src": "icon.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
