@@ -165,9 +165,12 @@ textarea{resize:vertical;min-height:70px}
 
 /* ── PROFIT BAR ─── */
 .profit-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
-  padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  padding:14px 16px;display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
 .profit-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
 .profit-val{font-size:22px;font-weight:800;letter-spacing:-.5px}
+@media(min-width:540px){
+  .profit-bar{flex-direction:row;justify-content:space-between;align-items:center;gap:0}
+}
 
 /* ── PER-PERSON GRID ─── */
 .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
@@ -834,13 +837,13 @@ function buildReport(rows) {
   const t=calcTotals(rows);
   let h='';
 
-  // ── Income breakdown: 2×2 + 1 full-width
+  // ── Summary: [Приход][Расходы] / [Налог][Копилка] / [Доход full-width]
   h+=`<div class="sum-grid">
     <div class="scard si"><div class="scard-lbl">Приход</div><div class="scard-val">${fmt(t.tInc)} р.</div></div>
+    <div class="scard se"><div class="scard-lbl">Расходы (осн.)</div><div class="scard-val">${fmt(t.tOper)} р.</div></div>
     <div class="scard st"><div class="scard-lbl">Налог УСН (7%)</div><div class="scard-val">${fmt(t.tax)} р.</div></div>
     <div class="scard sx"><div class="scard-lbl">Копилка (8%)</div><div class="scard-val">${fmt(t.piggy)} р.</div></div>
-    <div class="scard sn"><div class="scard-lbl">Доход (85%)</div><div class="scard-val">${fmt(t.net85)} р.</div></div>
-    <div class="scard se" style="grid-column:span 2"><div class="scard-lbl">Расходы (осн., из основного бюджета)</div><div class="scard-val">${fmt(t.tOper)} р.</div></div>
+    <div class="scard sn" style="grid-column:span 2"><div class="scard-lbl">Доход к использованию (85%)</div><div class="scard-val">${fmt(t.net85)} р.</div></div>
   </div>`;
 
   // ── Profit bar
