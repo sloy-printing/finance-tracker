@@ -6,11 +6,11 @@
 <meta name="theme-color" content="#0f1b2d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Финансы">
+<meta name="apple-mobile-web-app-title" content="SLOY Финансы">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f1b2d'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='system-ui,sans-serif' font-size='18' fill='%2322c55e' font-weight='bold'%3E%E2%82%BD%3C/text%3E%3C/svg%3E">
-<title>Финансы</title>
+<title>SLOY Финансы</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -229,14 +229,21 @@ textarea{resize:vertical;min-height:70px}
 
 /* ── DAILY REPORT ─── */
 .drep-summary{background:var(--ground);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:18px}
-.drep-sum-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px}
+.drep-sum-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:12px}
+.drep-sec-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);
+  padding:11px 0 5px;border-top:1.5px solid var(--border);margin-top:6px}
 .drep-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px;border-bottom:1px solid var(--border)}
 .drep-row:last-child{border-bottom:none}
-.drep-row.hl{font-weight:800;font-size:14px;border-top:2px solid var(--border);border-bottom:2px solid var(--border);padding:9px 0;margin:6px 0}
-.drep-row.sec{margin-top:8px;border-top:1px dashed var(--border);padding-top:8px}
 .drep-lbl{color:var(--text)}
 .drep-val{font-weight:600}
 .drep-val.g{color:var(--income)}.drep-val.r{color:var(--expense)}.drep-val.b{color:var(--blue)}.drep-val.o{color:var(--orange)}
+
+/* ── USER PICK BUTTONS ─── */
+.user-pick{display:flex;gap:8px}
+.user-pick-btn{flex:1;padding:12px 6px;font-size:15px;font-weight:600;text-align:center;
+  border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--ground);color:var(--muted);
+  cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.user-pick-btn.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
 
 .day-group{margin-bottom:18px}
 .day-hdr{font-size:13px;font-weight:700;color:var(--ink);padding-bottom:8px;
@@ -307,18 +314,18 @@ textarea{resize:vertical;min-height:70px}
 <div id="login" style="display:none">
   <div class="auth-card">
     <div class="auth-heading">
-      <div class="auth-title">Учёт финансов</div>
+      <div class="auth-title">SLOY Финансы</div>
       <div class="auth-sub">Вход только для авторизованных пользователей</div>
     </div>
     <div class="error-box" id="loginErr"></div>
     <div class="fg">
       <label>Пользователь</label>
-      <div class="sw"><select id="loginUser">
-        <option value="">— выберите —</option>
-        <option value="olga">Ольга</option>
-        <option value="evgeny">Евгений</option>
-        <option value="dmitry">Дмитрий</option>
-      </select></div>
+      <div class="user-pick">
+        <button class="user-pick-btn" id="ub_olga"   onclick="pickUser('olga')">Ольга</button>
+        <button class="user-pick-btn" id="ub_evgeny" onclick="pickUser('evgeny')">Евгений</button>
+        <button class="user-pick-btn" id="ub_dmitry" onclick="pickUser('dmitry')">Дмитрий</button>
+      </div>
+      <input type="hidden" id="loginUser" value="">
     </div>
     <div class="fg">
       <label>Пароль</label>
@@ -336,7 +343,7 @@ textarea{resize:vertical;min-height:70px}
 
   <div class="hdr">
     <div class="hdr-top">
-      <div class="hdr-brand">Учёт финансов</div>
+      <div class="hdr-brand">SLOY Финансы</div>
       <div class="hdr-right">
         <span class="hdr-user" id="hdrUser"></span>
         <button class="hdr-logout" onclick="doLogout()">Выйти</button>
@@ -537,8 +544,9 @@ const Q_RU    = ['I','II','III','IV'];
 // STATE
 // ══════════════════════════════════════
 let SCRIPT_URL = localStorage.getItem('fin_url')   || '';
-let TOKEN      = sessionStorage.getItem('fin_tok')  || '';
-let CUR_USER   = sessionStorage.getItem('fin_user') || '';
+let TOKEN      = '';
+let CUR_USER   = '';
+// Session loaded from localStorage in boot() via loadSession()
 let curPeriod  = 'month';
 const n0 = new Date();
 let selMonth = n0.getMonth()+1, selMYear = n0.getFullYear();
@@ -604,6 +612,7 @@ function calcTotals(rows) {
 // BOOT
 // ══════════════════════════════════════
 async function boot() {
+  loadSession(); // restore 24h session from localStorage
   if (!SCRIPT_URL) { show('setup'); return; }
   if (TOKEN && CUR_USER) {
     const r = await api({action:'ping',token:TOKEN});
@@ -686,15 +695,38 @@ async function doLogin() {
   if (!r)      { setErr('Нет ответа от скрипта. Проверьте URL.'); return; }
   if (r.error) { setErr(r.error); return; }
   if (r.success) {
-    TOKEN=r.token; CUR_USER=r.username;
-    sessionStorage.setItem('fin_tok',TOKEN);
-    sessionStorage.setItem('fin_user',CUR_USER);
+    saveSession(r.token, r.username);
     document.getElementById('loginPass').value='';
     mountApp();
   }
 }
 function doLogout() { clearSession(); show('login'); toast('Вы вышли из аккаунта'); }
-function clearSession() { TOKEN=''; CUR_USER=''; sessionStorage.removeItem('fin_tok'); sessionStorage.removeItem('fin_user'); }
+
+// 24-hour session stored in localStorage (survives tab/browser close)
+function saveSession(token, username) {
+  TOKEN = token; CUR_USER = username;
+  const expiry = Date.now() + 24 * 60 * 60 * 1000; // 24 часа
+  localStorage.setItem('fin_session', JSON.stringify({token, username, expiry}));
+}
+function loadSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem('fin_session') || 'null');
+    if (!s || Date.now() > s.expiry) { clearSession(); return; }
+    TOKEN = s.token; CUR_USER = s.username;
+  } catch(e) { clearSession(); }
+}
+function clearSession() {
+  TOKEN = ''; CUR_USER = '';
+  localStorage.removeItem('fin_session');
+}
+
+function pickUser(u) {
+  document.getElementById('loginUser').value = u;
+  ['olga','evgeny','dmitry'].forEach(x => {
+    document.getElementById('ub_'+x).classList.toggle('sel', x===u);
+  });
+}
+
 function setErr(m) { const e=document.getElementById('loginErr'); e.textContent=m; e.style.display='block'; }
 function hideErr() { document.getElementById('loginErr').style.display='none'; }
 
@@ -906,15 +938,15 @@ function txRow(r,type) {
     <div class="tx-mark ${cls}">${mark}</div>
     <div class="tx-info"><div class="tx-name">${name}</div><div class="tx-meta">${meta}</div></div>
     <div class="tx-amt ${cls}">${isInc?'+':'−'}${fmt(r.amount)} р.</div>
-    <button class="del" onclick="delTx('${r.id}')">✕</button>
+    ${CUR_USER==='olga'?`<button class="del" data-id="${esc(r.id)}" onclick="delTx(this.dataset.id)">✕</button>`:''}
   </div>`;
 }
 
 async function delTx(id) {
   if (!confirm('Удалить запись?')) return;
-  const r=await api({action:'delete',token:TOKEN,id});
+  const r=await api({action:'delete',token:TOKEN,id:String(id).trim()});
   if (r?.success) { toast('Запись удалена'); loadReport(); refreshHdr(); refreshAllTime(); }
-  else toast('Ошибка удаления');
+  else toast('Ошибка: '+(r?.error||'запись не найдена'));
 }
 
 // ══════════════════════════════════════
@@ -931,23 +963,29 @@ function showDailyReport() {
   const periodStr=document.getElementById('pLabel').textContent;
   let h='';
 
-  // Summary
+  // Summary — 3 sections with dividers, uniform font size
   h+=`<div class="drep-summary">
     <div class="drep-sum-title">${esc(periodStr)}</div>
+
+    <div class="drep-sec-hdr">Доходы и расходы</div>
     <div class="drep-row"><span class="drep-lbl">Приход</span><span class="drep-val g">+${fmt(t.tInc)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">Налог УСН (7%)</span><span class="drep-val r">−${fmt(t.tax)} р.</span></div>
-    <div class="drep-row"><span class="drep-lbl">Копилка (8%)</span><span class="drep-val o">−${fmt(t.piggy)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">В копилку (8%)</span><span class="drep-val o">−${fmt(t.piggy)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">Доход к использованию (85%)</span><span class="drep-val">${fmt(t.net85)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">Расходы (основные)</span><span class="drep-val r">−${fmt(t.tOper)} р.</span></div>
-    <div class="drep-row hl"><span class="drep-lbl">Прибыль к распределению</span><span class="drep-val ${t.profit>=0?'g':'r'}">${t.profit>=0?'+':''}${fmt(t.profit)} р.</span></div>
+
+    <div class="drep-sec-hdr">Распределение прибыли</div>
+    <div class="drep-row"><span class="drep-lbl">Прибыль к распределению</span><span class="drep-val ${t.profit>=0?'g':'r'}">${t.profit>=0?'+':''}${fmt(t.profit)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">Доля каждого (50%)</span><span class="drep-val">${fmt(t.perP)} р.</span></div>
     ${t.evgTot>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Евгению</span><span class="drep-val r">−${fmt(t.evgTot)} р.</span></div>`:''}
     ${t.dmtTot>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Дмитрию</span><span class="drep-val r">−${fmt(t.dmtTot)} р.</span></div>`:''}
     <div class="drep-row"><span class="drep-lbl">Евгений получит</span><span class="drep-val b">${fmt(t.evgFinal)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">Дмитрий получит</span><span class="drep-val b">${fmt(t.dmtFinal)} р.</span></div>
-    <div class="drep-row sec"><span class="drep-lbl">Копилка начислено</span><span class="drep-val o">+${fmt(t.piggy)} р.</span></div>
-    ${t.tRegular>0?`<div class="drep-row"><span class="drep-lbl">Регулярные платежи</span><span class="drep-val r">−${fmt(t.tRegular)} р.</span></div>`:''}
-    <div class="drep-row"><span class="drep-lbl">Остаток копилки за период</span><span class="drep-val o">${t.piggyBal>=0?'+':''}${fmt(t.piggyBal)} р.</span></div>
+
+    <div class="drep-sec-hdr">Копилка (регулярные платежи)</div>
+    <div class="drep-row"><span class="drep-lbl">Начислено в копилку</span><span class="drep-val o">+${fmt(t.piggy)} р.</span></div>
+    ${t.tRegular>0?`<div class="drep-row"><span class="drep-lbl">Потрачено (регулярные)</span><span class="drep-val r">−${fmt(t.tRegular)} р.</span></div>`:'<div class="drep-row"><span class="drep-lbl">Потрачено (регулярные)</span><span class="drep-val">0 р.</span></div>'}
+    <div class="drep-row"><span class="drep-lbl">Остаток копилки</span><span class="drep-val o">${t.piggyBal>=0?'+':''}${fmt(t.piggyBal)} р.</span></div>
   </div>`;
 
   // Daily groups
