@@ -1085,20 +1085,15 @@ function buildReport(rows, cum) {
   const cPro  = cum ? cum.cashProfit  : t.cashProfit;
   const total = cum ? cum.totalProfit : t.profit;
 
-  h += `<div class="sum-grid" style="margin-bottom:6px">
+  h += `<div class="sum-grid" style="margin-bottom:10px">
     <div class="scard sn">
-      <div class="scard-lbl">Прибыль (счёт)</div>
+      <div class="scard-lbl">Остаток на счёту</div>
       <div class="scard-val" style="color:${bpc}">${bPro>=0?'+':''}${fmt(bPro)} р.</div>
     </div>
     <div class="scard sc">
-      <div class="scard-lbl">Прибыль (касса)</div>
+      <div class="scard-lbl">Остаток в кассе</div>
       <div class="scard-val" style="color:${cpc}">${cPro>=0?'+':''}${fmt(cPro)} р.</div>
     </div>
-  </div>`;
-
-  h += `<div class="profit-bar">
-    <div class="profit-lbl">Итого к распределению</div>
-    <div class="profit-val" style="color:${tpc}">${total>=0?'+':''}${fmt(total)} руб.</div>
   </div>`;
 
   // ── НА КАЖДОГО: нарастающим итогом (счёт + касса) ────
