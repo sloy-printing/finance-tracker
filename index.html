@@ -183,10 +183,14 @@ textarea{resize:vertical;min-height:70px}
 /* PER-PERSON GRID */
 .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .pcard{border-radius:var(--r-sm);padding:14px;background:var(--split-bg);border:1px solid #ddd6fe}
-.pcard-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--split);margin-bottom:6px}
+.pcard-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--split);margin-bottom:8px}
+.pcard-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid #ede9fe}
+.pcard-row:last-of-type{border-bottom:none}
+.pcard-row-lbl{font-size:11px;font-weight:600;color:var(--muted)}
+.pcard-row-val{font-size:15px;font-weight:800}
 .pcard-val{font-size:20px;font-weight:800;color:var(--split);letter-spacing:-.5px;margin-bottom:6px}
 .pcard-val.neg{color:var(--expense)}
-.pcard-sub{font-size:11px;color:var(--muted);line-height:1.6}
+.pcard-sub{font-size:11px;color:var(--muted);line-height:1.6;margin-top:6px}
 
 /* SPLIT BLOCK */
 .split-block{background:var(--split-bg);border:1px solid #ddd6fe;border-radius:var(--r-sm);padding:14px 16px;margin-bottom:10px}
@@ -629,10 +633,26 @@ function calcTotals(rows) {
   const evgTot = sum(spl.filter(x => x.split_person === 'evgeny'));
   const dmtTot = sum(spl.filter(x => x.split_person === 'dmitry'));
 
-  const profit   = bankProfit + cashProfit; // общая прибыль к распределению
+  const profit   = bankProfit + cashProfit;
   const perP     = profit / 2;
-  const evgFinal = perP - evgTot;
-  const dmtFinal = perP - dmtTot;
+  const bankPerP = bankProfit / 2;
+  const cashPerP = cashProfit / 2;
+
+  // Выплаты (other_split) разбитые по типу оплаты
+  const evgBankW = sum(bankSpl.filter(x => x.split_person === 'evgeny'));
+  const dmtBankW = sum(bankSpl.filter(x => x.split_person === 'dmitry'));
+  const evgCashW = sum(cashSpl.filter(x => x.split_person === 'evgeny'));
+  const dmtCashW = sum(cashSpl.filter(x => x.split_person === 'dmitry'));
+
+  // Итог к выдаче каждому по типу
+  const evgBankFinal = bankPerP - evgBankW;
+  const evgCashFinal = cashPerP - evgCashW;
+  const dmtBankFinal = bankPerP - dmtBankW;
+  const dmtCashFinal = cashPerP - dmtCashW;
+
+  // Общий итог (для совместимости)
+  const evgFinal = evgBankFinal + evgCashFinal;
+  const dmtFinal = dmtBankFinal + dmtCashFinal;
 
   const tInc  = tBankInc + tCashInc;
   const tOper = tBankOper + tCashOper;
@@ -643,8 +663,10 @@ function calcTotals(rows) {
     bankRegular, tBankRegular, bankOper, tBankOper, bankProfit,
     tCashInc, cashOper, tCashOper, cashProfit, tCashExp, cashBal,
     piggyBal,
-    tInc, tOper, profit, perP, evgTot, dmtTot, evgFinal, dmtFinal,
-    // compat aliases
+    tInc, tOper, profit, perP, bankPerP, cashPerP,
+    evgTot, dmtTot, evgFinal, dmtFinal,
+    evgBankW, evgCashW, dmtBankW, dmtCashW,
+    evgBankFinal, evgCashFinal, dmtBankFinal, dmtCashFinal,
     tMain: tBankOper, tRegular: tBankRegular, net85: bankNet85,
   };
 }
@@ -982,24 +1004,67 @@ function buildReport(rows) {
     </div>`;
   }
 
-  // ── ОБЩАЯ ПРИБЫЛЬ К РАСПРЕДЕЛЕНИЮ ────────────────────
-  const pc = t.profit >= 0 ? 'var(--income)' : 'var(--expense)';
+  // ── ПРИБЫЛЬ ПО ИСТОЧНИКАМ + ИТОГО ────────────────────
+  const bpc = t.bankProfit >= 0 ? 'var(--income)' : 'var(--expense)';
+  const cpc = t.cashProfit >= 0 ? 'var(--income)' : 'var(--expense)';
+  const pc  = t.profit     >= 0 ? 'var(--income)' : 'var(--expense)';
+
+  h += `<div class="sum-grid" style="margin-bottom:6px">
+    <div class="scard sn">
+      <div class="scard-lbl">Прибыль (счёт)</div>
+      <div class="scard-val" style="color:${bpc}">${t.bankProfit>=0?'+':''}${fmt(t.bankProfit)} р.</div>
+    </div>
+    <div class="scard sc">
+      <div class="scard-lbl">Прибыль (касса)</div>
+      <div class="scard-val" style="color:${cpc}">${t.cashProfit>=0?'+':''}${fmt(t.cashProfit)} р.</div>
+    </div>
+  </div>`;
+
   h += `<div class="profit-bar">
-    <div class="profit-lbl">Прибыль к распределению</div>
+    <div class="profit-lbl">Итого к распределению</div>
     <div class="profit-val" style="color:${pc}">${t.profit>=0?'+':''}${fmt(t.profit)} руб.</div>
   </div>`;
 
-  // ── НА КАЖДОГО ────────────────────────────────────────
+  // ── НА КАЖДОГО: счёт + касса отдельно ────────────────
+  const pColor = (v) => v >= 0 ? 'var(--split)' : 'var(--expense)';
+  const pSign  = (v) => v >= 0 ? '+' : '';
+
   h += `<div class="pgrid">
     <div class="pcard">
       <div class="pcard-name">Евгений</div>
-      <div class="pcard-val${t.evgFinal<0?' neg':''}">${fmt(t.evgFinal)} р.</div>
-      <div class="pcard-sub">Доля: ${fmt(t.perP)} р.<br>${t.evgTot>0?`Выплачено: ${fmt(t.evgTot)} р.`:'Выплат нет'}</div>
+      <div class="pcard-row">
+        <span class="pcard-row-lbl">Счёт</span>
+        <span class="pcard-row-val" style="color:${pColor(t.evgBankFinal)}">${pSign(t.evgBankFinal)}${fmt(t.evgBankFinal)} р.</span>
+      </div>
+      <div class="pcard-row">
+        <span class="pcard-row-lbl">Касса</span>
+        <span class="pcard-row-val" style="color:${pColor(t.evgCashFinal)}">${pSign(t.evgCashFinal)}${fmt(t.evgCashFinal)} р.</span>
+      </div>
+      <div class="pcard-sub">${
+        t.evgBankW > 0 ? `Выпл. (счёт): ${fmt(t.evgBankW)} р.<br>` : ''
+      }${
+        t.evgCashW > 0 ? `Выпл. (касса): ${fmt(t.evgCashW)} р.` : ''
+      }${
+        t.evgBankW === 0 && t.evgCashW === 0 ? 'Выплат нет' : ''
+      }</div>
     </div>
     <div class="pcard">
       <div class="pcard-name">Дмитрий</div>
-      <div class="pcard-val${t.dmtFinal<0?' neg':''}">${fmt(t.dmtFinal)} р.</div>
-      <div class="pcard-sub">Доля: ${fmt(t.perP)} р.<br>${t.dmtTot>0?`Выплачено: ${fmt(t.dmtTot)} р.`:'Выплат нет'}</div>
+      <div class="pcard-row">
+        <span class="pcard-row-lbl">Счёт</span>
+        <span class="pcard-row-val" style="color:${pColor(t.dmtBankFinal)}">${pSign(t.dmtBankFinal)}${fmt(t.dmtBankFinal)} р.</span>
+      </div>
+      <div class="pcard-row">
+        <span class="pcard-row-lbl">Касса</span>
+        <span class="pcard-row-val" style="color:${pColor(t.dmtCashFinal)}">${pSign(t.dmtCashFinal)}${fmt(t.dmtCashFinal)} р.</span>
+      </div>
+      <div class="pcard-sub">${
+        t.dmtBankW > 0 ? `Выпл. (счёт): ${fmt(t.dmtBankW)} р.<br>` : ''
+      }${
+        t.dmtCashW > 0 ? `Выпл. (касса): ${fmt(t.dmtCashW)} р.` : ''
+      }${
+        t.dmtBankW === 0 && t.dmtCashW === 0 ? 'Выплат нет' : ''
+      }</div>
     </div>
   </div>`;
 
@@ -1094,12 +1159,18 @@ function showDailyReport() {
     `:''}
 
     <div class="drep-sec-hdr">Распределение прибыли</div>
-    <div class="drep-row"><span class="drep-lbl">Прибыль к распределению</span><span class="drep-val ${t.profit>=0?'g':'r'}">${t.profit>=0?'+':''}${fmt(t.profit)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Прибыль (счёт)</span><span class="drep-val ${t.bankProfit>=0?'g':'r'}">${t.bankProfit>=0?'+':''}${fmt(t.bankProfit)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Прибыль (касса)</span><span class="drep-val ${t.cashProfit>=0?'g':'r'}">${t.cashProfit>=0?'+':''}${fmt(t.cashProfit)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Итого к распределению</span><span class="drep-val ${t.profit>=0?'g':'r'}">${t.profit>=0?'+':''}${fmt(t.profit)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Евгений (счёт)</span><span class="drep-val b">${t.evgBankFinal>=0?'+':''}${fmt(t.evgBankFinal)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Евгений (касса)</span><span class="drep-val b">${t.evgCashFinal>=0?'+':''}${fmt(t.evgCashFinal)} р.</span></div>
+    ${t.evgBankW>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Евгению (счёт)</span><span class="drep-val r">−${fmt(t.evgBankW)} р.</span></div>`:''}
+    ${t.evgCashW>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Евгению (касса)</span><span class="drep-val r">−${fmt(t.evgCashW)} р.</span></div>`:''}
+    <div class="drep-row"><span class="drep-lbl">Дмитрий (счёт)</span><span class="drep-val b">${t.dmtBankFinal>=0?'+':''}${fmt(t.dmtBankFinal)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Дмитрий (касса)</span><span class="drep-val b">${t.dmtCashFinal>=0?'+':''}${fmt(t.dmtCashFinal)} р.</span></div>
+    ${t.dmtBankW>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Дмитрию (счёт)</span><span class="drep-val r">−${fmt(t.dmtBankW)} р.</span></div>`:''}
+    ${t.dmtCashW>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Дмитрию (касса)</span><span class="drep-val r">−${fmt(t.dmtCashW)} р.</span></div>`:''}
     <div class="drep-row"><span class="drep-lbl">Доля каждого (50%)</span><span class="drep-val">${fmt(t.perP)} р.</span></div>
-    ${t.evgTot>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Евгению</span><span class="drep-val r">−${fmt(t.evgTot)} р.</span></div>`:''}
-    ${t.dmtTot>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Дмитрию</span><span class="drep-val r">−${fmt(t.dmtTot)} р.</span></div>`:''}
-    <div class="drep-row"><span class="drep-lbl">Евгений получит</span><span class="drep-val b">${fmt(t.evgFinal)} р.</span></div>
-    <div class="drep-row"><span class="drep-lbl">Дмитрий получит</span><span class="drep-val b">${fmt(t.dmtFinal)} р.</span></div>
 
     <div class="drep-sec-hdr">Копилка (регулярные платежи)</div>
     <div class="drep-row"><span class="drep-lbl">Начислено в копилку</span><span class="drep-val o">+${fmt(t.piggy)} р.</span></div>
