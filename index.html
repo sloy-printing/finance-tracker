@@ -571,6 +571,7 @@ let selQ = Math.floor(n0.getMonth()/3)+1, selQYear = n0.getFullYear();
 let selYear = n0.getFullYear();
 let curPeriod = 'month';
 let lastRows = [];
+let lastCum  = null; // накопленные остатки до конца выбранного периода
 
 // ══════════════════════════════════════
 // CASH / BANK HELPERS
@@ -957,20 +958,48 @@ function setBtn(b,t,d) { b.textContent=t; b.disabled=d; }
 // ══════════════════════════════════════
 // REPORT
 // ══════════════════════════════════════
-async function loadReport() {
-  const[from,to]=periodDates();
-  if (!from||!to) { toast('Выберите даты'); return; }
-  const box=document.getElementById('repContent');
-  box.innerHTML='<div class="loading"><div class="spinner"></div> Загрузка...</div>';
-  const r=await api({action:'list',token:TOKEN,from,to});
-  if (!r||r.error) { box.innerHTML=`<div class="empty">${r?.error||'Ошибка загрузки данных'}</div>`; return; }
-  lastRows=r.rows||[];
-  if (!lastRows.length) { box.innerHTML='<div class="empty">Нет операций за этот период</div>'; setHdr([]); return; }
-  setHdr(lastRows);
-  box.innerHTML=buildReport(lastRows);
+
+// Накопленные остатки от начала времён до конца периода
+function calcCumulativeBalances(rows) {
+  const tBankInc   = sum(rows.filter(x => x.type==='income' && isBank(x)));
+  const tax        = round2(tBankInc * TAX_RATE);
+  const piggy      = round2(tBankInc * PIGGY_RATE);
+  const tBankReg   = sum(rows.filter(x => x.type==='expense' && x.category==='regular' && isBank(x)));
+  const tBankOther = sum(rows.filter(x => x.type==='expense' && x.category!=='regular' && isBank(x)));
+  const bankBal    = tBankInc - tax - piggy - tBankOther;
+  const piggyBal   = piggy - tBankReg;
+  const tCashInc   = sum(rows.filter(x => x.type==='income' && isCash(x)));
+  const tCashExp   = sum(rows.filter(x => x.type==='expense' && isCash(x)));
+  const cashBal    = tCashInc - tCashExp;
+  return { bankBal, piggyBal, cashBal };
 }
 
-function buildReport(rows) {
+async function loadReport() {
+  const [from, to] = periodDates();
+  if (!from||!to) { toast('Выберите даты'); return; }
+  const box = document.getElementById('repContent');
+  box.innerHTML = '<div class="loading"><div class="spinner"></div> Загрузка...</div>';
+
+  // Оба запроса параллельно: период и накопленный (с начала до конца периода)
+  const [r, cumR] = await Promise.all([
+    api({action:'list', token:TOKEN, from, to}),
+    api({action:'list', token:TOKEN, from:'2000-01-01', to})
+  ]);
+
+  if (!r||r.error) { box.innerHTML=`<div class="empty">${r?.error||'Ошибка загрузки данных'}</div>`; return; }
+  lastRows = r.rows || [];
+  lastCum  = calcCumulativeBalances(cumR?.rows || []);
+
+  // Плитки шапки (Остаток, Касса, Копилка) показывают
+  // накопленный остаток на конец выбранного периода
+  updateCumTiles(lastCum);
+
+  if (!lastRows.length) { box.innerHTML='<div class="empty">Нет операций за этот период</div>'; setHdr([]); return; }
+  setHdr(lastRows);
+  box.innerHTML = buildReport(lastRows, lastCum);
+}
+
+function buildReport(rows, cum) {
   const t = calcTotals(rows);
   let h = '';
 
@@ -1136,6 +1165,7 @@ function showDailyReport() {
   sorted.forEach(r => { if (!groups[r.date]) groups[r.date]=[]; groups[r.date].push(r); });
 
   const t = calcTotals(lastRows);
+  const cum = lastCum; // накопленные остатки до конца периода
   const periodStr = document.getElementById('pLabel').textContent;
   let h = '';
 
@@ -1240,37 +1270,26 @@ function setHdr(rows) {
   document.getElementById('hProfit').style.color  = t.profit>=0?'var(--income-acc)':'#f87171';
 }
 
+// Обновить плитки Остаток / Касса / Копилка в шапке
+function updateCumTiles(cum) {
+  const setT = (id, val, posCol) => {
+    const el = document.getElementById(id);
+    el.textContent = (val >= 0 ? '+' : '') + fmt(val) + ' р.';
+    el.style.color  = val >= 0 ? posCol : '#f87171';
+  };
+  setT('hBalance', cum.bankBal,  'var(--income-acc)');
+  setT('hCash',    cum.cashBal,  '#fbbf24');
+  setT('hPiggy',   cum.piggyBal, '#fbbf24');
+}
+
 // ══════════════════════════════════════
 // ALL-TIME BALANCES (Остаток + Касса + Копилка)
 // ══════════════════════════════════════
 async function refreshAllTime() {
-  const r = await api({action:'list',token:TOKEN,from:'2000-01-01',to:'2099-12-31'});
+  // Всегда от начала до сегодня (не завязан на период отчёта)
+  const r = await api({action:'list', token:TOKEN, from:'2000-01-01', to:'2099-12-31'});
   if (!r?.rows) return;
-  const rows = r.rows;
-
-  // Bank balance
-  const tBankInc  = sum(rows.filter(x=>x.type==='income' && isBank(x)));
-  const tax       = round2(tBankInc * TAX_RATE);
-  const piggy     = round2(tBankInc * PIGGY_RATE);
-  const tBankReg  = sum(rows.filter(x=>x.type==='expense' && x.category==='regular' && isBank(x)));
-  const tBankOther= sum(rows.filter(x=>x.type==='expense' && x.category!=='regular' && isBank(x)));
-  const mainBal   = tBankInc - tax - piggy - tBankOther;
-  const piggyBal  = piggy - tBankReg;
-
-  // Cash balance
-  const tCashInc = sum(rows.filter(x=>x.type==='income' && isCash(x)));
-  const tCashExp = sum(rows.filter(x=>x.type==='expense' && isCash(x)));
-  const cashBal  = tCashInc - tCashExp;
-
-  const setTile = (id, val, pos) => {
-    const el = document.getElementById(id);
-    el.textContent = (val>=0?'+':'')+fmt(val)+' р.';
-    el.style.color = val>=0 ? (pos||'var(--income-acc)') : '#f87171';
-  };
-
-  setTile('hBalance', mainBal);
-  setTile('hCash',    cashBal, '#fbbf24');
-  setTile('hPiggy',   piggyBal,'#fbbf24');
+  updateCumTiles(calcCumulativeBalances(r.rows));
 }
 
 // ══════════════════════════════════════
