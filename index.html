@@ -961,17 +961,59 @@ function setBtn(b,t,d) { b.textContent=t; b.disabled=d; }
 
 // Накопленные остатки от начала времён до конца периода
 function calcCumulativeBalances(rows) {
-  const tBankInc   = sum(rows.filter(x => x.type==='income' && isBank(x)));
-  const tax        = round2(tBankInc * TAX_RATE);
-  const piggy      = round2(tBankInc * PIGGY_RATE);
-  const tBankReg   = sum(rows.filter(x => x.type==='expense' && x.category==='regular' && isBank(x)));
-  const tBankOther = sum(rows.filter(x => x.type==='expense' && x.category!=='regular' && isBank(x)));
-  const bankBal    = tBankInc - tax - piggy - tBankOther;
-  const piggyBal   = piggy - tBankReg;
-  const tCashInc   = sum(rows.filter(x => x.type==='income' && isCash(x)));
-  const tCashExp   = sum(rows.filter(x => x.type==='expense' && isCash(x)));
-  const cashBal    = tCashInc - tCashExp;
-  return { bankBal, piggyBal, cashBal };
+  // ── BANK ──────────────────────────────────────────────
+  const bankInc_r  = rows.filter(x => x.type==='income' && isBank(x));
+  const bankExp_r  = rows.filter(x => x.type==='expense' && isBank(x));
+  const bankSpl_r  = bankExp_r.filter(x => x.category==='other_split');
+  const bankOper_r = bankExp_r.filter(x => x.category!=='regular' && x.category!=='other_split');
+  const bankReg_r  = bankExp_r.filter(x => x.category==='regular');
+
+  const tBankInc  = sum(bankInc_r);
+  const tax       = round2(tBankInc * TAX_RATE);
+  const piggy     = round2(tBankInc * PIGGY_RATE);
+  const tBankOper = sum(bankOper_r);
+  const tBankReg  = sum(bankReg_r);
+  const bankProfit= tBankInc - tax - piggy - tBankOper; // прибыль счёт до выплат
+  const piggyBal  = piggy - tBankReg;
+
+  const evgBankW  = sum(bankSpl_r.filter(x => x.split_person==='evgeny'));
+  const dmtBankW  = sum(bankSpl_r.filter(x => x.split_person==='dmitry'));
+  const bankBal   = bankProfit - evgBankW - dmtBankW; // остаток на счёте
+
+  // ── CASH ──────────────────────────────────────────────
+  const cashInc_r  = rows.filter(x => x.type==='income' && isCash(x));
+  const cashExp_r  = rows.filter(x => x.type==='expense' && isCash(x));
+  const cashSpl_r  = cashExp_r.filter(x => x.category==='other_split');
+  const cashOper_r = cashExp_r.filter(x => x.category!=='other_split');
+
+  const tCashInc   = sum(cashInc_r);
+  const tCashOper  = sum(cashOper_r);
+  const cashProfit = tCashInc - tCashOper; // прибыль касса до выплат
+
+  const evgCashW  = sum(cashSpl_r.filter(x => x.split_person==='evgeny'));
+  const dmtCashW  = sum(cashSpl_r.filter(x => x.split_person==='dmitry'));
+  const cashBal   = cashProfit - evgCashW - dmtCashW; // остаток в кассе
+
+  // ── РАСПРЕДЕЛЕНИЕ (нарастающим) ───────────────────────
+  const totalProfit  = bankProfit + cashProfit;
+  const bankPerP     = bankProfit / 2;
+  const cashPerP     = cashProfit / 2;
+
+  // Сколько каждый ещё не получил
+  const evgBankFinal = bankPerP - evgBankW;
+  const evgCashFinal = cashPerP - evgCashW;
+  const dmtBankFinal = bankPerP - dmtBankW;
+  const dmtCashFinal = cashPerP - dmtCashW;
+
+  return {
+    bankBal, cashBal, piggyBal,
+    bankProfit, cashProfit, totalProfit,
+    bankPerP, cashPerP,
+    evgBankW, evgCashW, dmtBankW, dmtCashW,
+    evgBankFinal, evgCashFinal,
+    dmtBankFinal, dmtCashFinal,
+    totalBal: bankBal + cashBal,
+  };
 }
 
 async function loadReport() {
@@ -1033,67 +1075,68 @@ function buildReport(rows, cum) {
     </div>`;
   }
 
-  // ── ПРИБЫЛЬ ПО ИСТОЧНИКАМ + ИТОГО ────────────────────
-  const bpc = t.bankProfit >= 0 ? 'var(--income)' : 'var(--expense)';
-  const cpc = t.cashProfit >= 0 ? 'var(--income)' : 'var(--expense)';
-  const pc  = t.profit     >= 0 ? 'var(--income)' : 'var(--expense)';
+  // ── ПРИБЫЛЬ И ОСТАТКИ (нарастающим итогом) ─────────────
+  // Всё что ниже — от начала времён до конца выбранного периода
+  const bpc = (cum?.bankProfit  ?? t.bankProfit)  >= 0 ? 'var(--income)' : 'var(--expense)';
+  const cpc = (cum?.cashProfit  ?? t.cashProfit)  >= 0 ? 'var(--income)' : 'var(--expense)';
+  const tpc = (cum?.totalProfit ?? t.profit)      >= 0 ? 'var(--income)' : 'var(--expense)';
+
+  const bPro  = cum ? cum.bankProfit  : t.bankProfit;
+  const cPro  = cum ? cum.cashProfit  : t.cashProfit;
+  const total = cum ? cum.totalProfit : t.profit;
 
   h += `<div class="sum-grid" style="margin-bottom:6px">
     <div class="scard sn">
       <div class="scard-lbl">Прибыль (счёт)</div>
-      <div class="scard-val" style="color:${bpc}">${t.bankProfit>=0?'+':''}${fmt(t.bankProfit)} р.</div>
+      <div class="scard-val" style="color:${bpc}">${bPro>=0?'+':''}${fmt(bPro)} р.</div>
     </div>
     <div class="scard sc">
       <div class="scard-lbl">Прибыль (касса)</div>
-      <div class="scard-val" style="color:${cpc}">${t.cashProfit>=0?'+':''}${fmt(t.cashProfit)} р.</div>
+      <div class="scard-val" style="color:${cpc}">${cPro>=0?'+':''}${fmt(cPro)} р.</div>
     </div>
   </div>`;
 
   h += `<div class="profit-bar">
     <div class="profit-lbl">Итого к распределению</div>
-    <div class="profit-val" style="color:${pc}">${t.profit>=0?'+':''}${fmt(t.profit)} руб.</div>
+    <div class="profit-val" style="color:${tpc}">${total>=0?'+':''}${fmt(total)} руб.</div>
   </div>`;
 
-  // ── НА КАЖДОГО: счёт + касса отдельно ────────────────
-  const pColor = (v) => v >= 0 ? 'var(--split)' : 'var(--expense)';
-  const pSign  = (v) => v >= 0 ? '+' : '';
+  // ── НА КАЖДОГО: нарастающим итогом (счёт + касса) ────
+  const evgBkF = cum ? cum.evgBankFinal : t.evgBankFinal;
+  const evgCsF = cum ? cum.evgCashFinal : t.evgCashFinal;
+  const dmtBkF = cum ? cum.dmtBankFinal : t.dmtBankFinal;
+  const dmtCsF = cum ? cum.dmtCashFinal : t.dmtCashFinal;
+  const evgBkW = cum ? cum.evgBankW     : t.evgBankW;
+  const evgCsW = cum ? cum.evgCashW     : t.evgCashW;
+  const dmtBkW = cum ? cum.dmtBankW     : t.dmtBankW;
+  const dmtCsW = cum ? cum.dmtCashW     : t.dmtCashW;
+  const pColor = v => v >= 0 ? 'var(--split)' : 'var(--expense)';
+  const pSign  = v => v >= 0 ? '+' : '';
 
   h += `<div class="pgrid">
     <div class="pcard">
       <div class="pcard-name">Евгений</div>
       <div class="pcard-row">
         <span class="pcard-row-lbl">Счёт</span>
-        <span class="pcard-row-val" style="color:${pColor(t.evgBankFinal)}">${pSign(t.evgBankFinal)}${fmt(t.evgBankFinal)} р.</span>
+        <span class="pcard-row-val" style="color:${pColor(evgBkF)}">${pSign(evgBkF)}${fmt(evgBkF)} р.</span>
       </div>
       <div class="pcard-row">
         <span class="pcard-row-lbl">Касса</span>
-        <span class="pcard-row-val" style="color:${pColor(t.evgCashFinal)}">${pSign(t.evgCashFinal)}${fmt(t.evgCashFinal)} р.</span>
+        <span class="pcard-row-val" style="color:${pColor(evgCsF)}">${pSign(evgCsF)}${fmt(evgCsF)} р.</span>
       </div>
-      <div class="pcard-sub">${
-        t.evgBankW > 0 ? `Выпл. (счёт): ${fmt(t.evgBankW)} р.<br>` : ''
-      }${
-        t.evgCashW > 0 ? `Выпл. (касса): ${fmt(t.evgCashW)} р.` : ''
-      }${
-        t.evgBankW === 0 && t.evgCashW === 0 ? 'Выплат нет' : ''
-      }</div>
+      <div class="pcard-sub">${evgBkW>0?`Выпл. (счёт): ${fmt(evgBkW)} р.<br>`:''}${evgCsW>0?`Выпл. (касса): ${fmt(evgCsW)} р.`:''}${evgBkW===0&&evgCsW===0?'Выплат нет':''}</div>
     </div>
     <div class="pcard">
       <div class="pcard-name">Дмитрий</div>
       <div class="pcard-row">
         <span class="pcard-row-lbl">Счёт</span>
-        <span class="pcard-row-val" style="color:${pColor(t.dmtBankFinal)}">${pSign(t.dmtBankFinal)}${fmt(t.dmtBankFinal)} р.</span>
+        <span class="pcard-row-val" style="color:${pColor(dmtBkF)}">${pSign(dmtBkF)}${fmt(dmtBkF)} р.</span>
       </div>
       <div class="pcard-row">
         <span class="pcard-row-lbl">Касса</span>
-        <span class="pcard-row-val" style="color:${pColor(t.dmtCashFinal)}">${pSign(t.dmtCashFinal)}${fmt(t.dmtCashFinal)} р.</span>
+        <span class="pcard-row-val" style="color:${pColor(dmtCsF)}">${pSign(dmtCsF)}${fmt(dmtCsF)} р.</span>
       </div>
-      <div class="pcard-sub">${
-        t.dmtBankW > 0 ? `Выпл. (счёт): ${fmt(t.dmtBankW)} р.<br>` : ''
-      }${
-        t.dmtCashW > 0 ? `Выпл. (касса): ${fmt(t.dmtCashW)} р.` : ''
-      }${
-        t.dmtBankW === 0 && t.dmtCashW === 0 ? 'Выплат нет' : ''
-      }</div>
+      <div class="pcard-sub">${dmtBkW>0?`Выпл. (счёт): ${fmt(dmtBkW)} р.<br>`:''}${dmtCsW>0?`Выпл. (касса): ${fmt(dmtCsW)} р.`:''}${dmtBkW===0&&dmtCsW===0?'Выплат нет':''}</div>
     </div>
   </div>`;
 
@@ -1188,19 +1231,14 @@ function showDailyReport() {
     <div class="drep-row"><span class="drep-lbl">Нетто по кассе</span><span class="drep-val ${t.cashBal>=0?'g':'r'}">${t.cashBal>=0?'+':''}${fmt(t.cashBal)} р.</span></div>
     `:''}
 
-    <div class="drep-sec-hdr">Распределение прибыли</div>
-    <div class="drep-row"><span class="drep-lbl">Прибыль (счёт)</span><span class="drep-val ${t.bankProfit>=0?'g':'r'}">${t.bankProfit>=0?'+':''}${fmt(t.bankProfit)} р.</span></div>
-    <div class="drep-row"><span class="drep-lbl">Прибыль (касса)</span><span class="drep-val ${t.cashProfit>=0?'g':'r'}">${t.cashProfit>=0?'+':''}${fmt(t.cashProfit)} р.</span></div>
-    <div class="drep-row"><span class="drep-lbl">Итого к распределению</span><span class="drep-val ${t.profit>=0?'g':'r'}">${t.profit>=0?'+':''}${fmt(t.profit)} р.</span></div>
-    <div class="drep-row"><span class="drep-lbl">Евгений (счёт)</span><span class="drep-val b">${t.evgBankFinal>=0?'+':''}${fmt(t.evgBankFinal)} р.</span></div>
-    <div class="drep-row"><span class="drep-lbl">Евгений (касса)</span><span class="drep-val b">${t.evgCashFinal>=0?'+':''}${fmt(t.evgCashFinal)} р.</span></div>
-    ${t.evgBankW>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Евгению (счёт)</span><span class="drep-val r">−${fmt(t.evgBankW)} р.</span></div>`:''}
-    ${t.evgCashW>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Евгению (касса)</span><span class="drep-val r">−${fmt(t.evgCashW)} р.</span></div>`:''}
-    <div class="drep-row"><span class="drep-lbl">Дмитрий (счёт)</span><span class="drep-val b">${t.dmtBankFinal>=0?'+':''}${fmt(t.dmtBankFinal)} р.</span></div>
-    <div class="drep-row"><span class="drep-lbl">Дмитрий (касса)</span><span class="drep-val b">${t.dmtCashFinal>=0?'+':''}${fmt(t.dmtCashFinal)} р.</span></div>
-    ${t.dmtBankW>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Дмитрию (счёт)</span><span class="drep-val r">−${fmt(t.dmtBankW)} р.</span></div>`:''}
-    ${t.dmtCashW>0?`<div class="drep-row"><span class="drep-lbl">Выплачено Дмитрию (касса)</span><span class="drep-val r">−${fmt(t.dmtCashW)} р.</span></div>`:''}
-    <div class="drep-row"><span class="drep-lbl">Доля каждого (50%)</span><span class="drep-val">${fmt(t.perP)} р.</span></div>
+    <div class="drep-sec-hdr">Распределение прибыли (нарастающим итогом)</div>
+    <div class="drep-row"><span class="drep-lbl">Прибыль (счёт)</span><span class="drep-val ${(cum?.bankProfit??t.bankProfit)>=0?'g':'r'}">${(cum?.bankProfit??t.bankProfit)>=0?'+':''}${fmt(cum?.bankProfit??t.bankProfit)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Прибыль (касса)</span><span class="drep-val ${(cum?.cashProfit??t.cashProfit)>=0?'g':'r'}">${(cum?.cashProfit??t.cashProfit)>=0?'+':''}${fmt(cum?.cashProfit??t.cashProfit)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Итого к распределению</span><span class="drep-val ${(cum?.totalProfit??t.profit)>=0?'g':'r'}">${(cum?.totalProfit??t.profit)>=0?'+':''}${fmt(cum?.totalProfit??t.profit)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Евгений (счёт)</span><span class="drep-val b">${(cum?.evgBankFinal??t.evgBankFinal)>=0?'+':''}${fmt(cum?.evgBankFinal??t.evgBankFinal)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Евгений (касса)</span><span class="drep-val b">${(cum?.evgCashFinal??t.evgCashFinal)>=0?'+':''}${fmt(cum?.evgCashFinal??t.evgCashFinal)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Дмитрий (счёт)</span><span class="drep-val b">${(cum?.dmtBankFinal??t.dmtBankFinal)>=0?'+':''}${fmt(cum?.dmtBankFinal??t.dmtBankFinal)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Дмитрий (касса)</span><span class="drep-val b">${(cum?.dmtCashFinal??t.dmtCashFinal)>=0?'+':''}${fmt(cum?.dmtCashFinal??t.dmtCashFinal)} р.</span></div>
 
     <div class="drep-sec-hdr">Копилка (регулярные платежи)</div>
     <div class="drep-row"><span class="drep-lbl">Начислено в копилку</span><span class="drep-val o">+${fmt(t.piggy)} р.</span></div>
