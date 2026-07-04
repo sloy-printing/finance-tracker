@@ -28,19 +28,19 @@
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   background:var(--ground);color:var(--text);-webkit-text-size-adjust:100%;font-variant-numeric:tabular-nums}
 
-/* ── SETUP ─── */
+/* SETUP */
 #setup{position:fixed;inset:0;z-index:900;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px}
 
-/* ── LOGIN ─── */
+/* LOGIN */
 #login{min-height:100vh;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px}
 .auth-card{background:var(--surface);border-radius:16px;padding:36px 28px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.35)}
 .auth-heading{margin-bottom:28px}
-.auth-title{font-size:21px;font-weight:800;color:var(--ink);letter-spacing:-.5px;line-height:1.15}
+.auth-title{font-size:21px;font-weight:800;color:var(--ink);letter-spacing:-.5px}
 .auth-sub{font-size:13px;color:var(--muted);margin-top:5px}
 .error-box{background:var(--expense-bg);border:1px solid #fecaca;color:var(--expense);border-radius:var(--r-sm);
   padding:10px 14px;font-size:13px;font-weight:500;margin-bottom:16px;display:none}
 
-/* ── FORMS ─── */
+/* FORMS */
 .fg{margin-bottom:14px}
 label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
 input,select,textarea{width:100%;padding:12px 14px;font-size:16px;border:1.5px solid var(--border);border-radius:var(--r-sm);
@@ -51,7 +51,20 @@ textarea{resize:vertical;min-height:70px}
 .sw{position:relative}
 .sw::after{content:'▾';position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);font-size:13px}
 
-/* ── BUTTONS ─── */
+/* PAYMENT TYPE TOGGLE */
+.pay-seg{display:flex;border:1.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden}
+.pay-btn{flex:1;padding:10px 8px;font-size:14px;font-weight:600;border:none;border-right:1px solid var(--border);
+  background:var(--ground);color:var(--muted);cursor:pointer;font-family:inherit;
+  -webkit-tap-highlight-color:transparent;transition:all .15s}
+.pay-btn:last-child{border-right:none}
+.pay-btn.on{background:var(--navy);color:#fff;border-right-color:transparent}
+
+/* CASH BADGE */
+.cash-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border);
+  border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle}
+
+/* BUTTONS */
 .btn{display:flex;align-items:center;justify-content:center;width:100%;padding:13px 20px;font-size:15px;font-weight:700;
   border:none;border-radius:var(--r-sm);cursor:pointer;font-family:inherit;
   transition:opacity .15s,transform .1s;-webkit-tap-highlight-color:transparent}
@@ -63,7 +76,7 @@ textarea{resize:vertical;min-height:70px}
 .btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--muted);font-size:13px;padding:9px 16px;width:auto}
 .btn-ghost-d{background:transparent;border:1.5px solid var(--expense);color:var(--expense);font-size:13px;padding:9px 16px;width:auto}
 
-/* ── HEADER ─── */
+/* HEADER */
 .hdr{background:var(--ink);color:#fff;padding:14px 18px 0;position:sticky;top:0;z-index:100}
 .hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .hdr-brand{font-size:15px;font-weight:800;letter-spacing:-.3px}
@@ -72,63 +85,52 @@ textarea{resize:vertical;min-height:70px}
 .hdr-logout{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:12px;
   font-weight:600;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
 
-/* Balance row — 5 tiles: 3+2 on mobile, 5-in-a-row on desktop */
+/* 6-tile balance bar: 3+3 on mobile, 6-in-a-row on wide */
 .bal-row{display:flex;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.08)}
 .bal-cell{flex:1 0 33.33%;padding:9px 0 10px 11px;
   border-right:1px solid rgba(255,255,255,.07);
   border-bottom:1px solid rgba(255,255,255,.07)}
-/* 3rd cell: end of row 1, no right border */
-.bal-cell:nth-child(3){border-right:none}
-/* 4th & 5th cells: row 2, no bottom border */
-.bal-cell:nth-child(n+4){border-bottom:none;flex:1 0 50%}
-/* last cell: no right border */
-.bal-cell:last-child{border-right:none}
-
+.bal-cell:nth-child(3n){border-right:none}           /* end of each row: tiles 3, 6 */
+.bal-cell:nth-child(n+4){border-bottom:none}          /* second row: tiles 4-6 */
 .bal-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.45;margin-bottom:2px}
-.bal-val{font-size:14px;font-weight:800;letter-spacing:-.4px}
-.bal-val.g{color:var(--income-acc)}
-.bal-val.r{color:#f87171}
-.bal-val.w{color:#fff}
-.bal-val.amber{color:#fbbf24}
-
+.bal-val{font-size:13px;font-weight:800;letter-spacing:-.3px}
+.bal-val.g{color:var(--income-acc)}.bal-val.r{color:#f87171}.bal-val.w{color:#fff}.bal-val.amber{color:#fbbf24}
 @media(min-width:480px){
-  .bal-cell{flex:1 0 20%;border-bottom:none}
-  .bal-cell:nth-child(3){border-right:1px solid rgba(255,255,255,.07)}
-  .bal-cell:nth-child(n+4){flex:1 0 20%}
-  .bal-val{font-size:15px}
+  .bal-cell{flex:1 0 16.66%;border-bottom:none}
+  .bal-cell:nth-child(3n){border-right:1px solid rgba(255,255,255,.07)} /* restore tile 3 */
+  .bal-cell:last-child{border-right:none}
+  .bal-val{font-size:14px}
   .bal-lbl{font-size:10px}
 }
-@media(min-width:640px){.bal-val{font-size:17px}}
+@media(min-width:640px){.bal-val{font-size:16px}}
 @media(min-width:768px){.bal-val{font-size:18px}}
 
-/* ── TABS ─── */
+/* TABS */
 .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:170px;z-index:99}
 .tab{flex:1;padding:12px 8px;font-size:13px;font-weight:600;text-align:center;border:none;
   border-bottom:2.5px solid transparent;color:var(--muted);background:none;font-family:inherit;
   cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .15s,border-color .15s}
 .tab.on{color:var(--ink);border-bottom-color:var(--ink)}
 
-/* ── CONTENT ─── */
+/* CONTENT */
 .pg{padding:14px 14px 32px;max-width:680px;margin:0 auto}
 
-/* ── CARDS ─── */
+/* CARDS */
 .card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:18px;margin-bottom:10px}
 .card-ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:14px}
 
-/* ── SEGMENT ─── */
+/* SEGMENT */
 .seg{display:flex;background:var(--ground);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:3px;gap:3px;margin-bottom:10px}
 .seg-btn{flex:1;padding:10px 8px;font-size:14px;font-weight:700;border:none;border-radius:5px;cursor:pointer;
   background:transparent;color:var(--muted);font-family:inherit;-webkit-tap-highlight-color:transparent;transition:all .15s}
 .seg-btn.s-in{background:var(--income);color:#fff}
 .seg-btn.s-ex{background:var(--expense);color:#fff}
 
-/* ── CHIPS ─── */
+/* CHIPS & PERIOD */
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{padding:7px 13px;font-size:13px;font-weight:600;border-radius:20px;border:1.5px solid var(--border);
   background:var(--surface);color:var(--muted);cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:all .15s}
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-
-/* ── PERIOD SUB ─── */
 .psub{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
 .psub .sw{flex:1;min-width:110px}
 .psub select{padding:9px 32px 9px 12px;font-size:14px}
@@ -140,39 +142,45 @@ textarea{resize:vertical;min-height:70px}
 .range-row input{flex:1;min-width:130px}
 .range-sep{color:var(--muted);font-size:13px;flex-shrink:0}
 .period-info{font-size:13px;color:var(--text);font-weight:600;margin-top:10px}
-
-/* ── REPORT BUTTON ─── */
 .rep-btn{display:flex;align-items:center;justify-content:center;width:100%;margin-top:12px;padding:11px 16px;
   font-size:13px;font-weight:700;border-radius:var(--r-sm);border:1.5px solid var(--border);
   background:var(--ground);color:var(--navy);cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:all .15s}
 .rep-btn:hover{border-color:var(--navy);background:#eff4fb}
 
-/* ── SUMMARY GRID ─── */
+/* SUMMARY GRID */
 .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .scard{border-radius:var(--r-sm);padding:13px}
 .scard.si{background:var(--income-bg);border:1px solid #a7f3c1}
 .scard.se{background:var(--expense-bg);border:1px solid #fecaca}
 .scard.st{background:var(--amber-bg);border:1px solid #fde68a}
 .scard.sn{background:#eff6ff;border:1px solid #bfdbfe}
-.scard.sx{background:var(--teal-bg);border:1px solid var(--teal-border)} /* piggy bank */
+.scard.sx{background:var(--teal-bg);border:1px solid var(--teal-border)}
+.scard.sc{background:var(--orange-bg);border:1px solid var(--orange-border)} /* cash */
 .scard-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
 .si .scard-lbl,.si .scard-val{color:var(--income)}
 .se .scard-lbl,.se .scard-val{color:var(--expense)}
 .st .scard-lbl,.st .scard-val{color:var(--amber)}
 .sn .scard-lbl,.sn .scard-val{color:var(--blue)}
 .sx .scard-lbl,.sx .scard-val{color:var(--teal)}
+.sc .scard-lbl,.sc .scard-val{color:var(--orange)}
 .scard-val{font-size:18px;font-weight:800;letter-spacing:-.5px}
 
-/* ── PROFIT BAR ─── */
+/* PROFIT BAR */
 .profit-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
   padding:14px 16px;display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
 .profit-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
 .profit-val{font-size:22px;font-weight:800;letter-spacing:-.5px}
-@media(min-width:540px){
-  .profit-bar{flex-direction:row;justify-content:space-between;align-items:center;gap:0}
-}
+@media(min-width:540px){.profit-bar{flex-direction:row;justify-content:space-between;align-items:center;gap:0}}
 
-/* ── PER-PERSON GRID ─── */
+/* CASH SECTION */
+.cash-block{background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:10px}
+.cash-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--orange);margin-bottom:10px}
+.cash-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--orange-border);font-size:14px}
+.cash-row:last-child{border-bottom:none}
+.cash-row-lbl{color:var(--text)}
+.cash-row-val{font-weight:700}
+
+/* PER-PERSON GRID */
 .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .pcard{border-radius:var(--r-sm);padding:14px;background:var(--split-bg);border:1px solid #ddd6fe}
 .pcard-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--split);margin-bottom:6px}
@@ -180,7 +188,7 @@ textarea{resize:vertical;min-height:70px}
 .pcard-val.neg{color:var(--expense)}
 .pcard-sub{font-size:11px;color:var(--muted);line-height:1.6}
 
-/* ── SPLIT BLOCK ─── */
+/* SPLIT BLOCK */
 .split-block{background:var(--split-bg);border:1px solid #ddd6fe;border-radius:var(--r-sm);padding:14px 16px;margin-bottom:10px}
 .split-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--split);margin-bottom:10px}
 .split-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #ede9fe}
@@ -188,7 +196,7 @@ textarea{resize:vertical;min-height:70px}
 .split-name{font-size:14px;font-weight:600}
 .split-amt{font-size:15px;font-weight:800;color:var(--split)}
 
-/* ── PIGGY BANK BLOCK ─── */
+/* PIGGY BANK */
 .piggy-block{background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:10px}
 .piggy-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--orange);margin-bottom:10px}
 .piggy-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--orange-border)}
@@ -198,7 +206,7 @@ textarea{resize:vertical;min-height:70px}
 .piggy-row:last-child .piggy-name{font-weight:800}
 .piggy-row:last-child .piggy-amt{font-size:17px;font-weight:800;color:var(--orange)}
 
-/* ── TX ROWS ─── */
+/* TX ROWS */
 .tx{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .tx:last-child{border-bottom:none}
 .tx-mark{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0}
@@ -213,7 +221,7 @@ textarea{resize:vertical;min-height:70px}
   flex-shrink:0;font-family:inherit;transition:color .15s;-webkit-tap-highlight-color:transparent}
 .del:hover{color:var(--expense)}
 
-/* ── REPORT MODAL ─── */
+/* REPORT MODAL */
 .rep-overlay{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
 .rep-sheet{background:var(--surface);width:100%;max-width:760px;max-height:92vh;border-radius:16px 16px 0 0;
   display:flex;flex-direction:column;box-shadow:0 -8px 40px rgba(0,0,0,.15)}
@@ -227,7 +235,7 @@ textarea{resize:vertical;min-height:70px}
 .rep-footer{padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface);display:flex;gap:8px}
 .rep-footer .btn{flex:1}
 
-/* ── DAILY REPORT ─── */
+/* DAILY REPORT */
 .drep-summary{background:var(--ground);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:18px}
 .drep-sum-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:12px}
 .drep-sec-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);
@@ -237,14 +245,6 @@ textarea{resize:vertical;min-height:70px}
 .drep-lbl{color:var(--text)}
 .drep-val{font-weight:600}
 .drep-val.g{color:var(--income)}.drep-val.r{color:var(--expense)}.drep-val.b{color:var(--blue)}.drep-val.o{color:var(--orange)}
-
-/* ── USER PICK BUTTONS ─── */
-.user-pick{display:flex;gap:8px}
-.user-pick-btn{flex:1;padding:12px 6px;font-size:15px;font-weight:600;text-align:center;
-  border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--ground);color:var(--muted);
-  cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:all .15s}
-.user-pick-btn.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
-
 .day-group{margin-bottom:18px}
 .day-hdr{font-size:13px;font-weight:700;color:var(--ink);padding-bottom:8px;
   border-bottom:2px solid var(--border);margin-bottom:6px;
@@ -261,26 +261,30 @@ textarea{resize:vertical;min-height:70px}
 .day-amt{font-size:14px;font-weight:800;flex-shrink:0}
 .day-amt.i{color:var(--income)}.day-amt.e{color:var(--expense)}
 
-/* ── SETTINGS ─── */
+/* USER PICK */
+.user-pick{display:flex;gap:8px}
+.user-pick-btn{flex:1;padding:12px 6px;font-size:15px;font-weight:600;text-align:center;
+  border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--ground);color:var(--muted);
+  cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.user-pick-btn.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* SETTINGS */
 .info-block{font-size:13px;line-height:1.7;color:var(--muted);margin-bottom:14px}
 .conn-status{margin-top:12px;font-size:13px;display:flex;align-items:center;gap:6px}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .dot-g{background:var(--income)}.dot-r{background:var(--expense)}
 
-/* ── STATES ─── */
+/* STATES */
 .loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--muted);font-size:13px}
 .spinner{width:17px;height:17px;border:2px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .65s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:48px 20px;font-size:13px;color:var(--muted)}
-
-/* ── TOAST ─── */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);
   color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;
   white-space:nowrap;transition:transform .28s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 20px rgba(0,0,0,.25)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .hidden{display:none!important}
 
-/* ── PRINT ─── */
 @media print{
   body>*:not(#repModal){display:none!important}
   #repModal{display:flex!important;position:static!important;background:none!important}
@@ -288,7 +292,6 @@ textarea{resize:vertical;min-height:70px}
   .rep-head,.rep-footer{display:none!important}
   .rep-body{padding:0!important}
 }
-
 @media(min-width:480px){.pg{padding:16px 18px 32px}}
 @media(min-width:640px){.pg{padding:20px 22px 40px}.hdr{padding:16px 24px 0}.tabs{top:120px}}
 @media(min-width:768px){.hdr{padding:18px 32px 0}.tabs{top:126px}.pg{padding:24px}.hdr-brand{font-size:16px}
@@ -321,9 +324,9 @@ textarea{resize:vertical;min-height:70px}
     <div class="fg">
       <label>Пользователь</label>
       <div class="user-pick">
-        <button class="user-pick-btn" id="ub_olga"   onclick="pickUser('olga')">Ольга</button>
-        <button class="user-pick-btn" id="ub_evgeny" onclick="pickUser('evgeny')">Евгений</button>
-        <button class="user-pick-btn" id="ub_dmitry" onclick="pickUser('dmitry')">Дмитрий</button>
+        <button class="user-pick-btn" id="ub_olga"   onclick="pickUser('olga')"   type="button">Ольга</button>
+        <button class="user-pick-btn" id="ub_evgeny" onclick="pickUser('evgeny')" type="button">Евгений</button>
+        <button class="user-pick-btn" id="ub_dmitry" onclick="pickUser('dmitry')" type="button">Дмитрий</button>
       </div>
       <input type="hidden" id="loginUser" value="">
     </div>
@@ -349,12 +352,13 @@ textarea{resize:vertical;min-height:70px}
         <button class="hdr-logout" onclick="doLogout()">Выйти</button>
       </div>
     </div>
-    <!-- 5 tiles: Приход | Расходы | Прибыль | Остаток | Копилка -->
+    <!-- 6 tiles: 3+3 mobile, 6-in-row desktop -->
     <div class="bal-row">
       <div class="bal-cell"><div class="bal-lbl">Приход</div><div class="bal-val g" id="hIncome">—</div></div>
       <div class="bal-cell"><div class="bal-lbl">Расходы</div><div class="bal-val r" id="hExpense">—</div></div>
       <div class="bal-cell"><div class="bal-lbl">Прибыль</div><div class="bal-val w" id="hProfit">—</div></div>
       <div class="bal-cell"><div class="bal-lbl">Остаток</div><div class="bal-val w" id="hBalance">—</div></div>
+      <div class="bal-cell"><div class="bal-lbl">Касса</div><div class="bal-val amber" id="hCash">—</div></div>
       <div class="bal-cell"><div class="bal-lbl">Копилка</div><div class="bal-val amber" id="hPiggy">—</div></div>
     </div>
   </div>
@@ -372,11 +376,20 @@ textarea{resize:vertical;min-height:70px}
       <button class="seg-btn"      id="sEx" onclick="setMode('expense')">Расход</button>
     </div>
 
+    <!-- INCOME FORM -->
     <div class="card" id="fIncome">
       <div class="card-ttl">Новый приход</div>
+      <div class="fg">
+        <label>Счёт</label>
+        <div class="pay-seg">
+          <button class="pay-btn on" id="iPayBank" onclick="setPayType('inc','bank')" type="button">Расчётный счёт</button>
+          <button class="pay-btn"    id="iPayCash" onclick="setPayType('inc','cash')" type="button">Касса</button>
+        </div>
+        <input type="hidden" id="iPayType" value="bank">
+      </div>
       <div class="fg"><label>Сумма, руб.</label>
         <input type="number" id="iAmt" placeholder="0.00" inputmode="decimal" min="0" step="0.01"></div>
-      <div class="fg"><label>Контрагент</label>
+      <div class="fg"><label>Контрагент <span id="iCptyNote" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)"></span></label>
         <input type="text" id="iCpty" placeholder="Название или имя" list="cptyList" autocomplete="off">
         <datalist id="cptyList"></datalist></div>
       <div class="fg"><label>Дата</label><input type="date" id="iDate"></div>
@@ -384,8 +397,17 @@ textarea{resize:vertical;min-height:70px}
       <button class="btn btn-income" onclick="addIncome()">Сохранить приход</button>
     </div>
 
+    <!-- EXPENSE FORM -->
     <div class="card hidden" id="fExpense">
       <div class="card-ttl">Новый расход</div>
+      <div class="fg">
+        <label>Счёт</label>
+        <div class="pay-seg">
+          <button class="pay-btn on" id="ePayBank" onclick="setPayType('exp','bank')" type="button">Расчётный счёт</button>
+          <button class="pay-btn"    id="ePayCash" onclick="setPayType('exp','cash')" type="button">Касса</button>
+        </div>
+        <input type="hidden" id="ePayType" value="bank">
+      </div>
       <div class="fg"><label>Сумма, руб.</label>
         <input type="number" id="eAmt" placeholder="0.00" inputmode="decimal" min="0" step="0.01"></div>
       <div class="fg"><label>Дата</label><input type="date" id="eDate"></div>
@@ -473,9 +495,7 @@ textarea{resize:vertical;min-height:70px}
       <div class="period-info" id="pLabel"></div>
       <button class="rep-btn" onclick="showDailyReport()">Сформировать отчёт по дням</button>
     </div>
-    <div id="repContent">
-      <div class="loading"><div class="spinner"></div> Загрузка...</div>
-    </div>
+    <div id="repContent"><div class="loading"><div class="spinner"></div> Загрузка...</div></div>
   </div>
 
   <!-- SETTINGS TAB -->
@@ -490,20 +510,16 @@ textarea{resize:vertical;min-height:70px}
     </div>
     <div class="card">
       <div class="card-ttl">Сессия</div>
-      <div class="info-block">Сессия действует 8 часов с момента входа.</div>
+      <div class="info-block">Сессия действует 24 часа. Закрытие браузера не сбрасывает вход.</div>
       <button class="btn-ghost-d btn" onclick="doLogout()">Выйти из аккаунта</button>
     </div>
     <div class="card">
       <div class="card-ttl">О приложении</div>
-      <div class="info-block" style="margin:0">
-        Данные хранятся в Google Sheets.<br>
-        Хостинг: GitHub Pages / Netlify.<br>
-        Пользователи: Ольга, Евгений, Дмитрий.
-      </div>
+      <div class="info-block" style="margin:0">Данные хранятся в Google Sheets.<br>Хостинг: GitHub Pages / Netlify.<br>Пользователи: Ольга, Евгений, Дмитрий.</div>
     </div>
   </div>
 
-</div><!-- /app -->
+</div>
 
 <!-- DAILY REPORT MODAL -->
 <div id="repModal" class="rep-overlay hidden" onclick="if(event.target===this)closeRepModal()">
@@ -526,8 +542,8 @@ textarea{resize:vertical;min-height:70px}
 // ══════════════════════════════════════
 // CONSTANTS
 // ══════════════════════════════════════
-const TAX_RATE   = 0.07; // 7% налог УСН
-const PIGGY_RATE = 0.08; // 8% копилка для регулярных платежей
+const TAX_RATE   = 0.07; // налог УСН — только с безналичных
+const PIGGY_RATE = 0.08; // копилка — только с безналичных
 
 const USER_LBL = {olga:'Ольга',evgeny:'Евгений',dmitry:'Дмитрий'};
 const CAT_LBL  = {
@@ -543,76 +559,101 @@ const Q_RU    = ['I','II','III','IV'];
 // ══════════════════════════════════════
 // STATE
 // ══════════════════════════════════════
-let SCRIPT_URL = localStorage.getItem('fin_url')   || '';
-let TOKEN      = '';
-let CUR_USER   = '';
-// Session loaded from localStorage in boot() via loadSession()
-let curPeriod  = 'month';
+let SCRIPT_URL = localStorage.getItem('fin_url') || '';
+let TOKEN = '', CUR_USER = '';
 const n0 = new Date();
 let selMonth = n0.getMonth()+1, selMYear = n0.getFullYear();
 let selQ = Math.floor(n0.getMonth()/3)+1, selQYear = n0.getFullYear();
 let selYear = n0.getFullYear();
+let curPeriod = 'month';
 let lastRows = [];
+
+// ══════════════════════════════════════
+// CASH / BANK HELPERS
+// ══════════════════════════════════════
+const isBank = x => !x.payment_type || x.payment_type !== 'cash';
+const isCash = x => x.payment_type === 'cash';
 
 // ══════════════════════════════════════
 // FINANCIAL CALCULATIONS
 // ══════════════════════════════════════
 /*
-  From each income:
-    - 7%  → tax (gone)
-    - 8%  → piggy bank (reserved for regular payments)
-    - 85% → available for operations + profit
-
-  Piggy bank:
-    - Funded by: income × PIGGY_RATE
-    - Spent from: "regular" category expenses
-    - Balance: piggy_funded - regular_expenses
-
-  Main balance (cumulative):
-    - income × (1 - TAX_RATE - PIGGY_RATE)
-      minus ALL expenses EXCEPT "regular" (those come from piggy bank)
-
-  Profit to distribute (period):
-    - income × (1 - TAX_RATE - PIGGY_RATE)
-      minus operating expenses (excl. regular AND excl. other_split)
-    - Split 50/50 between Evgeny and Dmitry
-    - Each person's net = their share − personal withdrawals (other_split)
+  РАСЧЁТНЫЙ СЧЁТ (bank):
+    - Налог 7% и копилка 8% вычитаются из каждого безналичного прихода
+    - Доступно для работы: 85% от безналичного прихода
+    - Регулярные платежи (bank) → из копилки
+    - Остальные расходы (bank) → из основного баланса
+  
+  КАССА (cash):
+    - Без налога, без копилки
+    - Все расходы наличными → из кассы
+    - Вносит 100% прибыли в общий пул распределения
 */
-
 function calcTotals(rows) {
-  const inc     = rows.filter(x => x.type==='income');
-  const exp     = rows.filter(x => x.type==='expense');
-  const regular = exp.filter(x => x.category==='regular');
-  const spl     = exp.filter(x => x.category==='other_split');
-  // operating = all expenses except regular (from piggy) and other_split (personal withdrawals)
-  const oper    = exp.filter(x => x.category!=='regular' && x.category!=='other_split');
+  const inc = rows.filter(x => x.type === 'income');
+  const exp = rows.filter(x => x.type === 'expense');
 
-  const tInc    = sum(inc);
-  const tax     = round2(tInc * TAX_RATE);
-  const piggy   = round2(tInc * PIGGY_RATE);
-  const net85   = tInc - tax - piggy;        // 85% of income
-  const tOper   = sum(oper);                 // operating expenses from main budget
-  const tRegular= sum(regular);              // regular payments from piggy bank
-  const tSpl    = sum(spl);                  // personal withdrawals (other_split)
+  const bankInc = inc.filter(isBank);
+  const cashInc = inc.filter(isCash);
+  const bankExp = exp.filter(isBank);
+  const cashExp = exp.filter(isCash);
 
-  // Profit to distribute = 85% net − operating (before personal withdrawals)
-  const profit  = net85 - tOper;
-  const perP    = profit / 2;
-  const evgTot  = sum(spl.filter(x => x.split_person==='evgeny'));
-  const dmtTot  = sum(spl.filter(x => x.split_person==='dmitry'));
-  const evgFinal= perP - evgTot;
-  const dmtFinal= perP - dmtTot;
-  const piggyBal= piggy - tRegular;         // piggy bank net for the period
+  // ── BANK ──────────────────────────────────────────────
+  const tBankInc    = sum(bankInc);
+  const tax         = round2(tBankInc * TAX_RATE);
+  const piggy       = round2(tBankInc * PIGGY_RATE);
+  const bankNet85   = tBankInc - tax - piggy;
 
-  return {inc,exp,regular,spl,oper,tInc,tax,piggy,net85,tOper,tRegular,tSpl,
-          profit,perP,evgTot,dmtTot,evgFinal,dmtFinal,piggyBal};
+  const bankRegular = bankExp.filter(x => x.category === 'regular');
+  const bankSpl     = bankExp.filter(x => x.category === 'other_split');
+  const bankOper    = bankExp.filter(x => x.category !== 'regular' && x.category !== 'other_split');
+
+  const tBankRegular = sum(bankRegular);
+  const tBankOper    = sum(bankOper);
+  const bankProfit   = bankNet85 - tBankOper;
+  const piggyBal     = piggy - tBankRegular;
+
+  // ── CASH ──────────────────────────────────────────────
+  const tCashInc  = sum(cashInc);
+  const cashSpl   = cashExp.filter(x => x.category === 'other_split');
+  const cashOper  = cashExp.filter(x => x.category !== 'other_split');
+
+  const tCashOper  = sum(cashOper);
+  const cashProfit = tCashInc - tCashOper;
+  const tCashExp   = sum(cashExp);
+  const cashBal    = tCashInc - tCashExp; // кассовый нетто за период
+
+  // ── COMBINED ──────────────────────────────────────────
+  const spl    = [...bankSpl, ...cashSpl];
+  const tSpl   = sum(spl);
+  const evgTot = sum(spl.filter(x => x.split_person === 'evgeny'));
+  const dmtTot = sum(spl.filter(x => x.split_person === 'dmitry'));
+
+  const profit   = bankProfit + cashProfit; // общая прибыль к распределению
+  const perP     = profit / 2;
+  const evgFinal = perP - evgTot;
+  const dmtFinal = perP - dmtTot;
+
+  const tInc  = tBankInc + tCashInc;
+  const tOper = tBankOper + tCashOper;
+
+  return {
+    inc, exp, bankInc, cashInc, bankExp, cashExp, spl,
+    tBankInc, tax, piggy, bankNet85,
+    bankRegular, tBankRegular, bankOper, tBankOper, bankProfit,
+    tCashInc, cashOper, tCashOper, cashProfit, tCashExp, cashBal,
+    piggyBal,
+    tInc, tOper, profit, perP, evgTot, dmtTot, evgFinal, dmtFinal,
+    // compat aliases
+    tMain: tBankOper, tRegular: tBankRegular, net85: bankNet85,
+  };
 }
 
 // ══════════════════════════════════════
-// BOOT
+// BOOT & SESSION
 // ══════════════════════════════════════
 async function boot() {
-  loadSession(); // restore 24h session from localStorage
+  loadSession();
   if (!SCRIPT_URL) { show('setup'); return; }
   if (TOKEN && CUR_USER) {
     const r = await api({action:'ping',token:TOKEN});
@@ -643,6 +684,8 @@ function mountApp() {
   document.getElementById('rTo').value   = td;
   setPLabel();
   refreshCptyList();
+  setPayType('inc','bank');
+  setPayType('exp','bank');
   fixTabsTop();
   window.addEventListener('resize', fixTabsTop);
   refreshHdr();
@@ -654,6 +697,27 @@ function fixTabsTop() {
     const hdr = document.querySelector('.hdr');
     if (hdr) document.querySelector('.tabs').style.top = hdr.offsetHeight + 'px';
   });
+}
+
+// ══════════════════════════════════════
+// PAYMENT TYPE TOGGLE
+// ══════════════════════════════════════
+function setPayType(form, type) {
+  const p = form === 'inc' ? 'i' : 'e';
+  document.getElementById(p+'PayType').value = type;
+  document.getElementById(p+'PayBank').classList.toggle('on', type === 'bank');
+  document.getElementById(p+'PayCash').classList.toggle('on', type === 'cash');
+  if (form === 'inc') {
+    const note = document.getElementById('iCptyNote');
+    const inp  = document.getElementById('iCpty');
+    if (type === 'cash') {
+      note.textContent = '(необязательно)';
+      inp.placeholder  = 'Источник (необязательно)';
+    } else {
+      note.textContent = '';
+      inp.placeholder  = 'Название или имя';
+    }
+  }
 }
 
 // ══════════════════════════════════════
@@ -677,36 +741,36 @@ function refreshCptyList() {
 // SETUP & AUTH
 // ══════════════════════════════════════
 function saveSetup() {
-  const v=document.getElementById('setupUrl').value.trim();
+  const v = document.getElementById('setupUrl').value.trim();
   if (!v||!v.startsWith('https://')) { toast('Введите корректный URL'); return; }
-  SCRIPT_URL=v; localStorage.setItem('fin_url',SCRIPT_URL); show('login');
+  SCRIPT_URL = v; localStorage.setItem('fin_url', SCRIPT_URL); show('login');
 }
-function openSetup() { document.getElementById('setupUrl').value=SCRIPT_URL; show('setup'); }
+function openSetup() { document.getElementById('setupUrl').value = SCRIPT_URL; show('setup'); }
 
 async function doLogin() {
-  const user=document.getElementById('loginUser').value;
-  const pass=document.getElementById('loginPass').value;
+  const user = document.getElementById('loginUser').value;
+  const pass = document.getElementById('loginPass').value;
   if (!user) { setErr('Выберите пользователя'); return; }
   if (!pass) { setErr('Введите пароль'); return; }
-  const btn=document.getElementById('loginBtn');
+  const btn = document.getElementById('loginBtn');
   btn.textContent='Вход...'; btn.disabled=true; hideErr();
-  const r=await api({action:'login',username:user,password:pass});
+  const r = await api({action:'login',username:user,password:pass});
   btn.textContent='Войти'; btn.disabled=false;
   if (!r)      { setErr('Нет ответа от скрипта. Проверьте URL.'); return; }
   if (r.error) { setErr(r.error); return; }
   if (r.success) {
     saveSession(r.token, r.username);
-    document.getElementById('loginPass').value='';
+    document.getElementById('loginPass').value = '';
     mountApp();
   }
 }
 function doLogout() { clearSession(); show('login'); toast('Вы вышли из аккаунта'); }
 
-// 24-hour session stored in localStorage (survives tab/browser close)
 function saveSession(token, username) {
   TOKEN = token; CUR_USER = username;
-  const expiry = Date.now() + 24 * 60 * 60 * 1000; // 24 часа
-  localStorage.setItem('fin_session', JSON.stringify({token, username, expiry}));
+  localStorage.setItem('fin_session', JSON.stringify({
+    token, username, expiry: Date.now() + 24 * 60 * 60 * 1000
+  }));
 }
 function loadSession() {
   try {
@@ -716,17 +780,14 @@ function loadSession() {
   } catch(e) { clearSession(); }
 }
 function clearSession() {
-  TOKEN = ''; CUR_USER = '';
-  localStorage.removeItem('fin_session');
+  TOKEN=''; CUR_USER=''; localStorage.removeItem('fin_session');
 }
-
 function pickUser(u) {
   document.getElementById('loginUser').value = u;
   ['olga','evgeny','dmitry'].forEach(x => {
     document.getElementById('ub_'+x).classList.toggle('sel', x===u);
   });
 }
-
 function setErr(m) { const e=document.getElementById('loginErr'); e.textContent=m; e.style.display='block'; }
 function hideErr() { document.getElementById('loginErr').style.display='none'; }
 
@@ -736,8 +797,8 @@ function hideErr() { document.getElementById('loginErr').style.display='none'; }
 async function api(data) {
   if (!SCRIPT_URL) return null;
   try {
-    const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),redirect:'follow'});
-    const j=await r.json();
+    const r = await fetch(SCRIPT_URL, {method:'POST',body:JSON.stringify(data),redirect:'follow'});
+    const j = await r.json();
     if (j.auth===false) { clearSession(); show('login'); toast('Сессия истекла, войдите снова'); return null; }
     return j;
   } catch(e) { console.error(e); return null; }
@@ -752,20 +813,20 @@ function goTab(t) {
     document.querySelectorAll('.tab')[i].classList.toggle('on',x===t);
   });
   if (t==='report')   loadReport();
-  if (t==='settings') document.getElementById('sUrl').value=SCRIPT_URL;
+  if (t==='settings') document.getElementById('sUrl').value = SCRIPT_URL;
 }
 function cap(s) { return s[0].toUpperCase()+s.slice(1); }
 function cl(id,hide) { document.getElementById(id).classList.toggle('hidden',hide); }
 
 // ══════════════════════════════════════
-// MODE (income / expense)
+// INCOME / EXPENSE MODE
 // ══════════════════════════════════════
 function setMode(m) {
-  document.getElementById('sIn').className='seg-btn'+(m==='income'?' s-in':'');
-  document.getElementById('sEx').className='seg-btn'+(m==='expense'?' s-ex':'');
+  document.getElementById('sIn').className = 'seg-btn'+(m==='income'?' s-in':'');
+  document.getElementById('sEx').className = 'seg-btn'+(m==='expense'?' s-ex':'');
   cl('fIncome',m!=='income'); cl('fExpense',m!=='expense');
 }
-function onCat() { cl('fPerson',document.getElementById('eCat').value!=='other_split'); }
+function onCat() { cl('fPerson', document.getElementById('eCat').value!=='other_split'); }
 
 // ══════════════════════════════════════
 // PERIOD
@@ -786,8 +847,11 @@ function setQ(q) { selQ=q; setQBtns(); setPLabel(); loadReport(); }
 function setQBtns() { [1,2,3,4].forEach(i=>document.getElementById('qb'+i).classList.toggle('on',i===selQ)); }
 function onQYearChange() { selQYear=parseInt(document.getElementById('selQYear').value); setPLabel(); loadReport(); }
 function setYear(y) { selYear=y; setYBtns(); setPLabel(); loadReport(); }
-function setYBtns() { [2025,2026,2027,2028,2029,2030].forEach(y=>{ const el=document.getElementById('yb'+y); if(el) el.classList.toggle('on',y===selYear); }); }
-
+function setYBtns() {
+  [2025,2026,2027,2028,2029,2030].forEach(y=>{
+    const el=document.getElementById('yb'+y); if(el) el.classList.toggle('on',y===selYear);
+  });
+}
 function periodDates() {
   if (curPeriod==='month') { const last=new Date(selMYear,selMonth,0).getDate(); return[`${selMYear}-${pad(selMonth)}-01`,`${selMYear}-${pad(selMonth)}-${pad(last)}`]; }
   if (curPeriod==='quarter') { const sm=(selQ-1)*3+1,em=selQ*3,last=new Date(selQYear,em,0).getDate(); return[`${selQYear}-${pad(sm)}-01`,`${selQYear}-${pad(em)}-${pad(last)}`]; }
@@ -807,50 +871,69 @@ function setPLabel() {
 // SAVE TRANSACTIONS
 // ══════════════════════════════════════
 async function addIncome() {
-  const amt=parseFloat(document.getElementById('iAmt').value),
-        cpty=document.getElementById('iCpty').value.trim(),
-        date=document.getElementById('iDate').value,
-        note=document.getElementById('iNote').value.trim();
-  if (!amt||amt<=0){toast('Введите сумму');return;}
-  if (!cpty){toast('Укажите контрагента');return;}
-  if (!date){toast('Укажите дату');return;}
-  const btn=document.querySelector('#fIncome .btn'); setBtn(btn,'Сохранение...',true);
-  const r=await api({action:'add',token:TOKEN,type:'income',amount:amt,date,counterparty:cpty,comment:note});
+  const amt     = parseFloat(document.getElementById('iAmt').value);
+  const cpty    = document.getElementById('iCpty').value.trim();
+  const date    = document.getElementById('iDate').value;
+  const note    = document.getElementById('iNote').value.trim();
+  const payType = document.getElementById('iPayType').value;
+
+  if (!amt||amt<=0) { toast('Введите сумму'); return; }
+  // Контрагент обязателен только для безналичных
+  if (payType !== 'cash' && !cpty) { toast('Укажите контрагента'); return; }
+  if (!date) { toast('Укажите дату'); return; }
+
+  const btn = document.querySelector('#fIncome .btn'); setBtn(btn,'Сохранение...',true);
+  const r = await api({action:'add',token:TOKEN,type:'income',amount:amt,date,
+    counterparty:cpty,comment:note,payment_type:payType});
   setBtn(btn,'Сохранить приход',false);
+
   if (r?.success) {
-    toast('Приход сохранён'); addToCpty(cpty);
-    document.getElementById('iAmt').value=''; document.getElementById('iCpty').value='';
-    document.getElementById('iDate').value=today(); document.getElementById('iNote').value='';
+    toast('Приход сохранён');
+    if (cpty) addToCpty(cpty);
+    document.getElementById('iAmt').value='';
+    document.getElementById('iCpty').value='';
+    document.getElementById('iDate').value=today();
+    document.getElementById('iNote').value='';
+    setPayType('inc','bank');
     refreshHdr(); refreshAllTime();
   } else toast('Ошибка: '+(r?.error||'нет связи'));
 }
 
 async function addExpense() {
-  const amt=parseFloat(document.getElementById('eAmt').value),
-        date=document.getElementById('eDate').value,
-        cat=document.getElementById('eCat').value,
-        person=document.getElementById('ePerson').value,
-        note=document.getElementById('eNote').value.trim();
-  if (!amt||amt<=0){toast('Введите сумму');return;}
-  if (!date){toast('Укажите дату');return;}
-  if (!cat){toast('Выберите статью расхода');return;}
-  if (cat==='other_split'&&!person){toast('Выберите получателя');return;}
-  const btn=document.querySelector('#fExpense .btn'); setBtn(btn,'Сохранение...',true);
-  const r=await api({action:'add',token:TOKEN,type:'expense',amount:amt,date,category:cat,
-    split_person:cat==='other_split'?person:null,comment:note});
+  const amt    = parseFloat(document.getElementById('eAmt').value);
+  const date   = document.getElementById('eDate').value;
+  const cat    = document.getElementById('eCat').value;
+  const person = document.getElementById('ePerson').value;
+  const note   = document.getElementById('eNote').value.trim();
+  const payType= document.getElementById('ePayType').value;
+
+  if (!amt||amt<=0)               { toast('Введите сумму'); return; }
+  if (!date)                      { toast('Укажите дату'); return; }
+  if (!cat)                       { toast('Выберите статью расхода'); return; }
+  if (cat==='other_split'&&!person){ toast('Выберите получателя'); return; }
+
+  const btn = document.querySelector('#fExpense .btn'); setBtn(btn,'Сохранение...',true);
+  const r = await api({action:'add',token:TOKEN,type:'expense',amount:amt,date,category:cat,
+    split_person:cat==='other_split'?person:null,comment:note,payment_type:payType});
   setBtn(btn,'Сохранить расход',false);
+
   if (r?.success) {
     toast('Расход сохранён');
-    document.getElementById('eAmt').value=''; document.getElementById('eDate').value=today();
-    document.getElementById('eCat').value=''; document.getElementById('ePerson').value='';
-    document.getElementById('eNote').value=''; cl('fPerson',true);
+    document.getElementById('eAmt').value='';
+    document.getElementById('eDate').value=today();
+    document.getElementById('eCat').value='';
+    document.getElementById('ePerson').value='';
+    document.getElementById('eNote').value='';
+    cl('fPerson',true);
+    setPayType('exp','bank');
     refreshHdr(); refreshAllTime();
   } else toast('Ошибка: '+(r?.error||'нет связи'));
 }
+
 function setBtn(b,t,d) { b.textContent=t; b.disabled=d; }
 
 // ══════════════════════════════════════
-// PERIOD REPORT
+// REPORT
 // ══════════════════════════════════════
 async function loadReport() {
   const[from,to]=periodDates();
@@ -866,27 +949,48 @@ async function loadReport() {
 }
 
 function buildReport(rows) {
-  const t=calcTotals(rows);
-  let h='';
+  const t = calcTotals(rows);
+  let h = '';
 
-  // ── Summary: [Приход][Расходы] / [Налог][Копилка] / [Доход full-width]
-  h+=`<div class="sum-grid">
-    <div class="scard si"><div class="scard-lbl">Приход</div><div class="scard-val">${fmt(t.tInc)} р.</div></div>
-    <div class="scard se"><div class="scard-lbl">Расходы (осн.)</div><div class="scard-val">${fmt(t.tOper)} р.</div></div>
+  // ── РАСЧЁТНЫЙ СЧЁТ: сводка ────────────────────────────
+  h += `<div class="sum-grid">
+    <div class="scard si"><div class="scard-lbl">Приход (счёт)</div><div class="scard-val">${fmt(t.tBankInc)} р.</div></div>
+    <div class="scard se"><div class="scard-lbl">Расходы (счёт)</div><div class="scard-val">${fmt(t.tBankOper)} р.</div></div>
     <div class="scard st"><div class="scard-lbl">Налог УСН (7%)</div><div class="scard-val">${fmt(t.tax)} р.</div></div>
     <div class="scard sx"><div class="scard-lbl">Копилка (8%)</div><div class="scard-val">${fmt(t.piggy)} р.</div></div>
-    <div class="scard sn" style="grid-column:span 2"><div class="scard-lbl">Доход к использованию (85%)</div><div class="scard-val">${fmt(t.net85)} р.</div></div>
+    <div class="scard sn" style="grid-column:span 2"><div class="scard-lbl">Доход к использованию (85%)</div><div class="scard-val">${fmt(t.bankNet85)} р.</div></div>
   </div>`;
 
-  // ── Profit bar
-  const pc=t.profit>=0?'var(--income)':'var(--expense)';
-  h+=`<div class="profit-bar">
+  // ── КАССА: сводка (только если есть операции) ─────────
+  if (t.tCashInc > 0 || t.tCashOper > 0) {
+    const cashColor = t.cashBal >= 0 ? 'var(--income)' : 'var(--expense)';
+    const cashSign  = t.cashBal >= 0 ? '+' : '';
+    h += `<div class="cash-block">
+      <div class="cash-hdr">Касса (наличные)</div>
+      <div class="cash-row">
+        <span class="cash-row-lbl">Приход</span>
+        <span class="cash-row-val" style="color:var(--income)">+${fmt(t.tCashInc)} р.</span>
+      </div>
+      <div class="cash-row">
+        <span class="cash-row-lbl">Расходы</span>
+        <span class="cash-row-val" style="color:var(--expense)">−${fmt(t.tCashOper)} р.</span>
+      </div>
+      <div class="cash-row">
+        <span class="cash-row-lbl" style="font-weight:700">Нетто по кассе</span>
+        <span class="cash-row-val" style="color:${cashColor};font-size:16px;font-weight:800">${cashSign}${fmt(t.cashBal)} р.</span>
+      </div>
+    </div>`;
+  }
+
+  // ── ОБЩАЯ ПРИБЫЛЬ К РАСПРЕДЕЛЕНИЮ ────────────────────
+  const pc = t.profit >= 0 ? 'var(--income)' : 'var(--expense)';
+  h += `<div class="profit-bar">
     <div class="profit-lbl">Прибыль к распределению</div>
     <div class="profit-val" style="color:${pc}">${t.profit>=0?'+':''}${fmt(t.profit)} руб.</div>
   </div>`;
 
-  // ── Per-person profit
-  h+=`<div class="pgrid">
+  // ── НА КАЖДОГО ────────────────────────────────────────
+  h += `<div class="pgrid">
     <div class="pcard">
       <div class="pcard-name">Евгений</div>
       <div class="pcard-val${t.evgFinal<0?' neg':''}">${fmt(t.evgFinal)} р.</div>
@@ -899,29 +1003,30 @@ function buildReport(rows) {
     </div>
   </div>`;
 
-  // ── Personal withdrawals block (if any)
-  if (t.tSpl>0) {
-    h+=`<div class="split-block"><div class="split-hdr">Другое — личные выплаты</div>
-      ${t.evgTot>0?`<div class="split-row"><span class="split-name">Евгений</span><span class="split-amt">${fmt(t.evgTot)} р.</span></div>`:''}
-      ${t.dmtTot>0?`<div class="split-row"><span class="split-name">Дмитрий</span><span class="split-amt">${fmt(t.dmtTot)} р.</span></div>`:''}
+  // ── ЛИЧНЫЕ ВЫПЛАТЫ ────────────────────────────────────
+  if (t.tSpl > 0) {
+    const evgS = sum(t.spl.filter(x=>x.split_person==='evgeny'));
+    const dmtS = sum(t.spl.filter(x=>x.split_person==='dmitry'));
+    h += `<div class="split-block"><div class="split-hdr">Другое — личные выплаты</div>
+      ${evgS>0?`<div class="split-row"><span class="split-name">Евгений</span><span class="split-amt">${fmt(evgS)} р.</span></div>`:''}
+      ${dmtS>0?`<div class="split-row"><span class="split-name">Дмитрий</span><span class="split-amt">${fmt(dmtS)} р.</span></div>`:''}
     </div>`;
   }
 
-  // ── Piggy bank section
-  const pbColor=t.piggyBal>=0?`color:var(--teal)`:`color:var(--expense)`;
-  h+=`<div class="piggy-block">
-    <div class="piggy-hdr">Копилка — регулярные платежи (8% от приходов)</div>
-    <div class="piggy-row"><span class="piggy-name">Начислено в копилку</span><span class="piggy-amt" style="color:var(--teal)">+${fmt(t.piggy)} р.</span></div>
-    ${t.tRegular>0?`<div class="piggy-row"><span class="piggy-name">Регулярные платежи</span><span class="piggy-amt" style="color:var(--expense)">−${fmt(t.tRegular)} р.</span></div>`:''}
-    <div class="piggy-row"><span class="piggy-name">Остаток копилки за период</span><span class="piggy-amt" style="${pbColor}">${t.piggyBal>=0?'+':''}${fmt(t.piggyBal)} р.</span></div>
+  // ── КОПИЛКА ───────────────────────────────────────────
+  const pbC = t.piggyBal >= 0 ? 'var(--teal)' : 'var(--expense)';
+  h += `<div class="piggy-block">
+    <div class="piggy-hdr">Копилка — регулярные платежи (8% от безналичных приходов)</div>
+    <div class="piggy-row"><span class="piggy-name">Начислено</span><span class="piggy-amt" style="color:var(--teal)">+${fmt(t.piggy)} р.</span></div>
+    ${t.tBankRegular>0?`<div class="piggy-row"><span class="piggy-name">Регулярные платежи</span><span class="piggy-amt" style="color:var(--expense)">−${fmt(t.tBankRegular)} р.</span></div>`:''}
+    <div class="piggy-row"><span class="piggy-name">Остаток копилки за период</span><span class="piggy-amt" style="color:${pbC}">${t.piggyBal>=0?'+':''}${fmt(t.piggyBal)} р.</span></div>
   </div>`;
 
-  // ── Income list
+  // ── СПИСКИ ОПЕРАЦИЙ ───────────────────────────────────
   if (t.inc.length) {
     h+=`<div class="card"><div class="card-ttl">Приходы (${t.inc.length})</div>`;
     t.inc.forEach(x=>{h+=txRow(x,'income');}); h+=`</div>`;
   }
-  // ── Expense list
   if (t.exp.length) {
     h+=`<div class="card"><div class="card-ttl">Расходы (${t.exp.length})</div>`;
     t.exp.forEach(x=>{h+=txRow(x,'expense');}); h+=`</div>`;
@@ -929,14 +1034,20 @@ function buildReport(rows) {
   return h;
 }
 
-function txRow(r,type) {
-  const isInc=type==='income',cls=isInc?'i':'e',mark=isInc?'+':'−';
-  const name=isInc?esc(r.counterparty||'—')
-    :esc((CAT_LBL[r.category]||r.category)+(r.split_person?` — ${USER_LBL[r.split_person]||r.split_person}`:''));
-  const meta=[fdate(r.date),r.comment?esc(r.comment):''].filter(Boolean).join(' · ');
-  return`<div class="tx">
+function txRow(r, type) {
+  const isInc = type==='income', cls=isInc?'i':'e', mark=isInc?'+':'−';
+  const cash  = isCash(r);
+  const name  = isInc
+    ? esc(r.counterparty || (cash ? 'Наличные' : '—'))
+    : esc((CAT_LBL[r.category]||r.category)+(r.split_person?` — ${USER_LBL[r.split_person]||r.split_person}`:''));
+  const cashLabel = cash ? '<span class="cash-badge">Касса</span>' : '';
+  const meta = [fdate(r.date), r.comment ? esc(r.comment) : ''].filter(Boolean).join(' · ');
+  return `<div class="tx">
     <div class="tx-mark ${cls}">${mark}</div>
-    <div class="tx-info"><div class="tx-name">${name}</div><div class="tx-meta">${meta}</div></div>
+    <div class="tx-info">
+      <div class="tx-name">${name}${cashLabel}</div>
+      <div class="tx-meta">${meta}</div>
+    </div>
     <div class="tx-amt ${cls}">${isInc?'+':'−'}${fmt(r.amount)} р.</div>
     ${CUR_USER==='olga'?`<button class="del" data-id="${esc(r.id)}" onclick="delTx(this.dataset.id)">✕</button>`:''}
   </div>`;
@@ -944,7 +1055,7 @@ function txRow(r,type) {
 
 async function delTx(id) {
   if (!confirm('Удалить запись?')) return;
-  const r=await api({action:'delete',token:TOKEN,id:String(id).trim()});
+  const r = await api({action:'delete',token:TOKEN,id:String(id).trim()});
   if (r?.success) { toast('Запись удалена'); loadReport(); refreshHdr(); refreshAllTime(); }
   else toast('Ошибка: '+(r?.error||'запись не найдена'));
 }
@@ -955,24 +1066,32 @@ async function delTx(id) {
 function showDailyReport() {
   if (!lastRows.length) { toast('Нет данных — сначала загрузите отчёт'); return; }
 
-  const sorted=[...lastRows].sort((a,b)=>a.date.localeCompare(b.date));
-  const groups={};
-  sorted.forEach(r=>{if(!groups[r.date])groups[r.date]=[];groups[r.date].push(r);});
+  const sorted = [...lastRows].sort((a,b)=>a.date.localeCompare(b.date));
+  const groups = {};
+  sorted.forEach(r => { if (!groups[r.date]) groups[r.date]=[]; groups[r.date].push(r); });
 
-  const t=calcTotals(lastRows);
-  const periodStr=document.getElementById('pLabel').textContent;
-  let h='';
+  const t = calcTotals(lastRows);
+  const periodStr = document.getElementById('pLabel').textContent;
+  let h = '';
 
-  // Summary — 3 sections with dividers, uniform font size
-  h+=`<div class="drep-summary">
+  // ── СВОДКА: 3 РАЗДЕЛА ──────────────────────────────────────────
+  h += `<div class="drep-summary">
     <div class="drep-sum-title">${esc(periodStr)}</div>
 
-    <div class="drep-sec-hdr">Доходы и расходы</div>
-    <div class="drep-row"><span class="drep-lbl">Приход</span><span class="drep-val g">+${fmt(t.tInc)} р.</span></div>
+    <div class="drep-sec-hdr">Расчётный счёт</div>
+    <div class="drep-row"><span class="drep-lbl">Приход</span><span class="drep-val g">+${fmt(t.tBankInc)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">Налог УСН (7%)</span><span class="drep-val r">−${fmt(t.tax)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">В копилку (8%)</span><span class="drep-val o">−${fmt(t.piggy)} р.</span></div>
-    <div class="drep-row"><span class="drep-lbl">Доход к использованию (85%)</span><span class="drep-val">${fmt(t.net85)} р.</span></div>
-    <div class="drep-row"><span class="drep-lbl">Расходы (основные)</span><span class="drep-val r">−${fmt(t.tOper)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Доход к использованию (85%)</span><span class="drep-val">${fmt(t.bankNet85)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Расходы (счёт)</span><span class="drep-val r">−${fmt(t.tBankOper)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Прибыль (счёт)</span><span class="drep-val ${t.bankProfit>=0?'g':'r'}">${t.bankProfit>=0?'+':''}${fmt(t.bankProfit)} р.</span></div>
+
+    ${t.tCashInc>0||t.tCashOper>0?`
+    <div class="drep-sec-hdr">Касса (наличные)</div>
+    <div class="drep-row"><span class="drep-lbl">Приход наличными</span><span class="drep-val g">+${fmt(t.tCashInc)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Расходы наличными</span><span class="drep-val r">−${fmt(t.tCashOper)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">Нетто по кассе</span><span class="drep-val ${t.cashBal>=0?'g':'r'}">${t.cashBal>=0?'+':''}${fmt(t.cashBal)} р.</span></div>
+    `:''}
 
     <div class="drep-sec-hdr">Распределение прибыли</div>
     <div class="drep-row"><span class="drep-lbl">Прибыль к распределению</span><span class="drep-val ${t.profit>=0?'g':'r'}">${t.profit>=0?'+':''}${fmt(t.profit)} р.</span></div>
@@ -984,41 +1103,48 @@ function showDailyReport() {
 
     <div class="drep-sec-hdr">Копилка (регулярные платежи)</div>
     <div class="drep-row"><span class="drep-lbl">Начислено в копилку</span><span class="drep-val o">+${fmt(t.piggy)} р.</span></div>
-    ${t.tRegular>0?`<div class="drep-row"><span class="drep-lbl">Потрачено (регулярные)</span><span class="drep-val r">−${fmt(t.tRegular)} р.</span></div>`:'<div class="drep-row"><span class="drep-lbl">Потрачено (регулярные)</span><span class="drep-val">0 р.</span></div>'}
+    ${t.tBankRegular>0?`<div class="drep-row"><span class="drep-lbl">Потрачено (регулярные)</span><span class="drep-val r">−${fmt(t.tBankRegular)} р.</span></div>`:`<div class="drep-row"><span class="drep-lbl">Потрачено (регулярные)</span><span class="drep-val">0 р.</span></div>`}
     <div class="drep-row"><span class="drep-lbl">Остаток копилки</span><span class="drep-val o">${t.piggyBal>=0?'+':''}${fmt(t.piggyBal)} р.</span></div>
   </div>`;
 
-  // Daily groups
-  Object.entries(groups).forEach(([date,txs])=>{
-    const[y,m,d]=date.split('-').map(Number);
-    const wd=WD_RU[new Date(y,m-1,d).getDay()];
-    const dayNet=txs.reduce((s,x)=>x.type==='income'?s+ +x.amount:s- +x.amount,0);
-    const dayColor=dayNet>=0?'var(--income)':'var(--expense)';
-    h+=`<div class="day-group">
+  // ── ОПЕРАЦИИ ПО ДНЯМ ───────────────────────────────────────────
+  Object.entries(groups).forEach(([date,txs]) => {
+    const [y,m,d] = date.split('-').map(Number);
+    const wd = WD_RU[new Date(y,m-1,d).getDay()];
+    const dayNet = txs.reduce((s,x)=>x.type==='income'?s+ +x.amount:s- +x.amount, 0);
+    const dayColor = dayNet>=0?'var(--income)':'var(--expense)';
+
+    h += `<div class="day-group">
       <div class="day-hdr">
         <span>${d} ${MO_GEN[m-1]} ${y}<span class="day-wd">${wd}</span></span>
         <span class="day-total" style="color:${dayColor}">${dayNet>=0?'+':''}${fmt(dayNet)} р.</span>
       </div>`;
-    txs.forEach(r=>{
-      const isInc=r.type==='income',cls=isInc?'i':'e',mark=isInc?'+':'−';
-      const name=isInc?esc(r.counterparty||'—')
-        :esc((CAT_LBL[r.category]||r.category)+(r.split_person?` — ${USER_LBL[r.split_person]}`:''));
-      h+=`<div class="day-tx">
+
+    txs.forEach(r => {
+      const isInc = r.type==='income', cls=isInc?'i':'e', mark=isInc?'+':'−';
+      const cash  = isCash(r);
+      const name  = isInc
+        ? esc(r.counterparty || (cash ? 'Наличные' : '—'))
+        : esc((CAT_LBL[r.category]||r.category)+(r.split_person?` — ${USER_LBL[r.split_person]}`:''));
+      const cashLbl = cash ? ' <span class="cash-badge">Касса</span>' : '';
+
+      h += `<div class="day-tx">
         <div class="day-mark ${cls}">${mark}</div>
         <div class="day-info">
-          <div class="day-name">${name}</div>
+          <div class="day-name">${name}${cashLbl}</div>
           ${r.comment?`<div class="day-note">${esc(r.comment)}</div>`:''}
         </div>
         <div class="day-amt ${cls}">${isInc?'+':'−'}${fmt(r.amount)} р.</div>
       </div>`;
     });
-    h+=`</div>`;
+
+    h += `</div>`;
   });
 
-  document.getElementById('repTitle').textContent=`Отчёт — ${periodStr}`;
-  document.getElementById('repBody').innerHTML=h;
-  cl('repModal',false);
-  document.body.style.overflow='hidden';
+  document.getElementById('repTitle').textContent = `Отчёт — ${periodStr}`;
+  document.getElementById('repBody').innerHTML = h;
+  cl('repModal', false);
+  document.body.style.overflow = 'hidden';
 }
 
 function closeRepModal() { cl('repModal',true); document.body.style.overflow=''; }
@@ -1027,65 +1153,69 @@ function closeRepModal() { cl('repModal',true); document.body.style.overflow='';
 // HEADER — period stats
 // ══════════════════════════════════════
 async function refreshHdr() {
-  const[from,to]=periodDates();
+  const [from,to] = periodDates();
   if (!from||!to) return;
-  const r=await api({action:'list',token:TOKEN,from,to});
+  const r = await api({action:'list',token:TOKEN,from,to});
   if (!r?.rows) return;
   setHdr(r.rows);
 }
 
 function setHdr(rows) {
-  const t=calcTotals(rows);
+  const t = calcTotals(rows);
+  // Приход и расходы — суммарные (безнал + нал)
   document.getElementById('hIncome').textContent  = fmt(t.tInc)+' р.';
-  document.getElementById('hExpense').textContent = fmt(t.tOper)+' р.'; // operating excl. regular & split
+  document.getElementById('hExpense').textContent = fmt(t.tOper)+' р.';
   document.getElementById('hProfit').textContent  = (t.profit>=0?'+':'')+fmt(t.profit)+' р.';
   document.getElementById('hProfit').style.color  = t.profit>=0?'var(--income-acc)':'#f87171';
 }
 
 // ══════════════════════════════════════
-// ALL-TIME BALANCE & PIGGY BANK
+// ALL-TIME BALANCES (Остаток + Касса + Копилка)
 // ══════════════════════════════════════
 async function refreshAllTime() {
-  // Fetch ALL transactions ever recorded
-  const r=await api({action:'list',token:TOKEN,from:'2000-01-01',to:'2099-12-31'});
+  const r = await api({action:'list',token:TOKEN,from:'2000-01-01',to:'2099-12-31'});
   if (!r?.rows) return;
+  const rows = r.rows;
 
-  const rows=r.rows;
-  const tInc    = sum(rows.filter(x=>x.type==='income'));
-  const tax     = round2(tInc*TAX_RATE);
-  const piggy   = round2(tInc*PIGGY_RATE);
-  const tRegular= sum(rows.filter(x=>x.type==='expense'&&x.category==='regular'));
-  // All non-regular expenses reduce the main balance (incl. other_split)
-  const tOther  = sum(rows.filter(x=>x.type==='expense'&&x.category!=='regular'));
+  // Bank balance
+  const tBankInc  = sum(rows.filter(x=>x.type==='income' && isBank(x)));
+  const tax       = round2(tBankInc * TAX_RATE);
+  const piggy     = round2(tBankInc * PIGGY_RATE);
+  const tBankReg  = sum(rows.filter(x=>x.type==='expense' && x.category==='regular' && isBank(x)));
+  const tBankOther= sum(rows.filter(x=>x.type==='expense' && x.category!=='regular' && isBank(x)));
+  const mainBal   = tBankInc - tax - piggy - tBankOther;
+  const piggyBal  = piggy - tBankReg;
 
-  // Main balance = income × 85% − all non-regular expenses
-  const mainBal  = tInc - tax - piggy - tOther;
-  // Piggy bank = income × 8% − regular payments
-  const piggyBal = piggy - tRegular;
+  // Cash balance
+  const tCashInc = sum(rows.filter(x=>x.type==='income' && isCash(x)));
+  const tCashExp = sum(rows.filter(x=>x.type==='expense' && isCash(x)));
+  const cashBal  = tCashInc - tCashExp;
 
-  const bEl=document.getElementById('hBalance');
-  bEl.textContent=(mainBal>=0?'+':'')+fmt(mainBal)+' р.';
-  bEl.style.color=mainBal>=0?'var(--income-acc)':'#f87171';
+  const setTile = (id, val, pos) => {
+    const el = document.getElementById(id);
+    el.textContent = (val>=0?'+':'')+fmt(val)+' р.';
+    el.style.color = val>=0 ? (pos||'var(--income-acc)') : '#f87171';
+  };
 
-  const pEl=document.getElementById('hPiggy');
-  pEl.textContent=(piggyBal>=0?'+':'')+fmt(piggyBal)+' р.';
-  pEl.style.color=piggyBal>=0?'#fbbf24':'#f87171';
+  setTile('hBalance', mainBal);
+  setTile('hCash',    cashBal, '#fbbf24');
+  setTile('hPiggy',   piggyBal,'#fbbf24');
 }
 
 // ══════════════════════════════════════
 // SETTINGS
 // ══════════════════════════════════════
 function saveSettings() {
-  const v=document.getElementById('sUrl').value.trim();
+  const v = document.getElementById('sUrl').value.trim();
   if (!v) { toast('Введите URL'); return; }
-  SCRIPT_URL=v; localStorage.setItem('fin_url',SCRIPT_URL); toast('Настройки сохранены');
+  SCRIPT_URL = v; localStorage.setItem('fin_url',SCRIPT_URL); toast('Настройки сохранены');
 }
 async function testConn() {
-  const el=document.getElementById('connSt'); el.classList.remove('hidden');
+  const el = document.getElementById('connSt'); el.classList.remove('hidden');
   el.innerHTML='<div class="spinner" style="width:14px;height:14px"></div> Проверяю...';
-  const r=await api({action:'ping',token:TOKEN});
-  if (r?.success){el.innerHTML='<div class="dot dot-g"></div> Подключено';el.style.color='var(--income)';}
-  else{el.innerHTML='<div class="dot dot-r"></div> '+(r?.error||'Нет ответа');el.style.color='var(--expense)';}
+  const r = await api({action:'ping',token:TOKEN});
+  if (r?.success) { el.innerHTML='<div class="dot dot-g"></div> Подключено'; el.style.color='var(--income)'; }
+  else { el.innerHTML='<div class="dot dot-r"></div> '+(r?.error||'Нет ответа'); el.style.color='var(--expense)'; }
 }
 
 // ══════════════════════════════════════
@@ -1093,7 +1223,7 @@ async function testConn() {
 // ══════════════════════════════════════
 function today()    { return new Date().toISOString().slice(0,10); }
 function pad(n)     { return String(n).padStart(2,'0'); }
-function sum(a)     { return a.reduce((s,x)=>s+ +x.amount,0); }
+function sum(a)     { return a.reduce((s,x)=>s+ +x.amount, 0); }
 function round2(n)  { return Math.round(n*100)/100; }
 function fmt(n)     { return Number(n).toLocaleString('ru-RU',{maximumFractionDigits:2}); }
 function fdate(s)   { if(!s)return''; const[y,m,d]=String(s).split('-'); return`${d}.${m}.${y}`; }
