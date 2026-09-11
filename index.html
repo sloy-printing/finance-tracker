@@ -1077,13 +1077,13 @@ function buildReport(rows, cum) {
 
   // ── ПРИБЫЛЬ И ОСТАТКИ (нарастающим итогом) ─────────────
   // Всё что ниже — от начала времён до конца выбранного периода
-  const bpc = (cum?.bankProfit  ?? t.bankProfit)  >= 0 ? 'var(--income)' : 'var(--expense)';
-  const cpc = (cum?.cashProfit  ?? t.cashProfit)  >= 0 ? 'var(--income)' : 'var(--expense)';
-  const tpc = (cum?.totalProfit ?? t.profit)      >= 0 ? 'var(--income)' : 'var(--expense)';
+  const bpc = (cum?.bankBal  ?? t.bankProfit)  >= 0 ? 'var(--income)' : 'var(--expense)';
+  const cpc = (cum?.cashBal  ?? t.cashProfit)  >= 0 ? 'var(--income)' : 'var(--expense)';
+  const tpc = (cum?.totalBal ?? t.profit)      >= 0 ? 'var(--income)' : 'var(--expense)';
 
-  const bPro  = cum ? cum.bankProfit  : t.bankProfit;
-  const cPro  = cum ? cum.cashProfit  : t.cashProfit;
-  const total = cum ? cum.totalProfit : t.profit;
+  const bPro  = cum ? cum.bankBal  : t.bankProfit;
+  const cPro  = cum ? cum.cashBal  : t.cashProfit;
+  const total = cum ? cum.totalBal : t.profit;
 
   h += `<div class="sum-grid" style="margin-bottom:10px">
     <div class="scard sn">
