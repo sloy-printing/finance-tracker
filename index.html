@@ -353,7 +353,7 @@ details.explain p{font-size:14px;line-height:1.55;color:#384456;margin-top:10px}
         <details class="explain" open>
           <summary>Как считаются деньги</summary>
           <p><b>Расчётный счёт.</b> С каждого поступления на счёт 7% откладывается в <b>налоговый фонд</b>, 8% в <b>копилку</b>. Оставшиеся 85% — свободные деньги для расходов и выплат партнёрам.</p>
-          <p>Остаток на счёте = свободные деньги + копилка + налоговый фонд. Эта сумма должна совпадать с выпиской банка.</p>
+          <p>Копилки — неприкосновенный запас. Считается, что 15% ушли сразу при поступлении, поэтому в «Всего денег» они не входят и показываются отдельно.</p>
           <p><b>Копилка 8%</b> — для регулярных платежей. <b>Налоговый фонд 7%</b> — для уплаты УСН. Когда платите из них, выберите в расходе «Из каких денег» нужный фонд: свободные деньги при этом не уменьшаются.</p>
           <p><b>Касса</b> — наличные. Без налога и копилки.</p>
           <p><b>Доли партнёров.</b> Прибыль (85% поступлений на счёт минус расходы, плюс приход кассы минус расходы кассы) делится 50/50 между Евгением и Дмитрием. Из доли вычитается то, что уже выплачено.</p>
@@ -492,7 +492,8 @@ function compute(rows) {
       else if (cat === 'other_split') b.pay[who] += a;
       else { b.oper += a; if (cat === 'taxes') { b.oldTaxes += a; b.oldTaxesN++; } }
     }
-    if (cat !== 'other_split') cats[cat] = (cats[cat]||0) + a;
+    // траты из копилок в статьи не идут: эти деньги «ушли» в момент поступления
+    if (cat !== 'other_split' && !(!isCash(r) && (cat === 'regular' || cat === 'tax_payment'))) cats[cat] = (cats[cat]||0) + a;
   }
 
   b.toTax = r2(b.toTax); b.toPig = r2(b.toPig);
@@ -501,8 +502,10 @@ function compute(rows) {
   b.free   = b.profit - b.payTotal;                     // свободные деньги
   b.pig    = b.toPig - b.fromPig;                       // остаток копилки 8%
   b.tax    = b.toTax - b.fromTax;                       // остаток налогового фонда 7%
-  b.total  = b.free + b.pig + b.tax;                    // фактический остаток на счёте
-  b.out    = b.oper + b.fromPig + b.fromTax + b.payTotal;
+  b.reserved = b.pig + b.tax;                           // НЗ: в «Всего» не входит
+  // Ушло со счёта: 15% в копилки сразу при поступлении + расходы + выплаты.
+  // Траты из копилок сюда не входят — эти деньги уже «ушли» при отчислении.
+  b.out    = b.toTax + b.toPig + b.oper + b.payTotal;
 
   c.payTotal = c.pay.evgeny + c.pay.dmitry + c.pay.other;
   c.profit = c.inc - c.oper;
@@ -516,7 +519,7 @@ function compute(rows) {
     share[p] = { bank, cash, total: bank + cash, paid: b.pay[p] + c.pay[p] };
   }
 
-  return { b, c, cats, share, inc: b.inc + c.inc, out: b.out + c.out, total: b.total + c.bal };
+  return { b, c, cats, share, inc: b.inc + c.inc, out: b.out + c.out, total: b.free + c.bal };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -634,49 +637,32 @@ function renderNow() {
   let h = `<div class="screen-title">Сейчас</div>
     <div class="screen-sub">Остатки на ${d.getDate()} ${MONTHS_GEN[d.getMonth()]} ${d.getFullYear()}</div>`;
 
-  // Всего денег
+  // Всего денег — только то, чем можно распоряжаться (без копилок)
   h += `<div class="card hero">
     <div class="card-t">Всего денег</div>
-    <div class="big">${money(t.total)}</div>
+    <div class="big ${t.total<0?'r':''}">${money(t.total)}</div>
     <div class="hero-split">
-      <div><div class="k">На расчётном счёте</div><div class="v">${money(b.total)}</div></div>
+      <div><div class="k">На счёте</div><div class="v">${money(b.free)}</div></div>
       <div><div class="k">В кассе</div><div class="v">${money(c.bal)}</div></div>
     </div>
   </div>`;
 
-  // Расчётный счёт: из чего состоит
-  const pos = v => Math.max(0, v), sumPos = pos(b.free)+pos(b.pig)+pos(b.tax) || 1;
+  // Копилки — НЗ, отдельно
   h += `<div class="card">
-    <div class="card-h"><div class="card-t">Расчётный счёт</div></div>
-    <div class="mid ${cls(b.total)}">${money(b.total)}</div>
-    <div class="bar">
-      <span style="width:${pos(b.free)/sumPos*100}%;background:var(--free)"></span>
-      <span style="width:${pos(b.pig)/sumPos*100}%;background:var(--pig)"></span>
-      <span style="width:${pos(b.tax)/sumPos*100}%;background:var(--tax)"></span>
-    </div>
+    <div class="card-h"><div class="card-t">Копилки</div><div class="mut" style="font-size:15px;font-weight:700">${money(b.reserved)}</div></div>
     <div class="rows">
-      <div class="row"><div class="k"><span class="dot" style="background:var(--free)"></span><div>Свободные деньги<small>для расходов и выплат</small></div></div><div class="v ${cls(b.free)}">${money(b.free)}</div></div>
-      <div class="row"><div class="k"><span class="dot" style="background:var(--pig)"></span><div>Копилка 8%<small>для регулярных платежей</small></div></div><div class="v ${cls(b.pig)}">${money(b.pig)}</div></div>
-      <div class="row"><div class="k"><span class="dot" style="background:var(--tax)"></span><div>Налоговый фонд 7%<small>для уплаты УСН</small></div></div><div class="v ${cls(b.tax)}">${money(b.tax)}</div></div>
+      <div class="row"><div class="k"><span class="dot" style="background:var(--pig)"></span><div>Копилка 8%<small>регулярные платежи</small></div></div><div class="v ${cls(b.pig)}">${money(b.pig)}</div></div>
+      <div class="row"><div class="k"><span class="dot" style="background:var(--tax)"></span><div>Налоговый фонд 7%<small>налог УСН</small></div></div><div class="v ${cls(b.tax)}">${money(b.tax)}</div></div>
     </div>
-    <div class="card-note">Сумма должна совпадать с остатком в банковской выписке.</div>
   </div>`;
 
   if (b.oldTaxesN > 0) {
-    h += `<div class="hint">Есть ${b.oldTaxesN} ${plural(b.oldTaxesN,'расход','расхода','расходов')} «Налоги и взносы» на ${money(b.oldTaxes)}, списанные из свободных денег. Если это был УСН, его нужно списать из налогового фонда, иначе налог учитывается дважды. Удалите такую запись и внесите заново с источником «Налоговый фонд 7%» или в таблице замените категорию <b>taxes</b> на <b>tax_payment</b>.</div>`;
+    h += `<div class="hint">Есть ${b.oldTaxesN} ${plural(b.oldTaxesN,'расход','расхода','расходов')} «Налоги и взносы» на ${money(b.oldTaxes)}, списанные со счёта. Если это был УСН, его нужно списать из налогового фонда, иначе налог учитывается дважды. Удалите запись и внесите заново с источником «Налоговый фонд 7%» или в таблице замените категорию <b>taxes</b> на <b>tax_payment</b>.</div>`;
   }
-
-  // Касса
-  h += `<div class="card">
-    <div class="card-h"><div class="card-t">Касса</div></div>
-    <div class="mid ${cls(c.bal)}">${money(c.bal)}</div>
-    <div class="card-note">Наличные: без налога и копилки.</div>
-  </div>`;
 
   // Партнёры
   h += `<div class="card">
     <div class="card-h"><div class="card-t">Доли партнёров</div></div>
-    <div class="card-note" style="margin-top:2px">Сколько ещё причитается каждому: прибыль 50/50 минус уже выплаченное</div>
     <div class="partners">${PARTNERS.map(p => {
       const s = t.share[p];
       return `<div class="pt">
@@ -752,23 +738,17 @@ function renderPeriod() {
     <div><div class="k">Разница</div><div class="v ${net<0?'r':'g'}">${signed(net)}</div></div>
   </div>`;
 
-  // Расчётный счёт — движение
+  // Расчётный счёт — движение (копилки сюда не входят)
   const bS=S.b, bM=M.b, bE=E.b;
   h += `<div class="card">
     <div class="sec-h"><span class="dot" style="background:var(--free)"></span>Расчётный счёт</div>
     <div class="rows">
-      <div class="row sub"><div class="k">На начало периода</div><div class="v">${money(bS.total)}</div></div>
+      <div class="row sub"><div class="k">На начало периода</div><div class="v">${money(bS.free)}</div></div>
       <div class="row"><div class="k">Поступления</div><div class="v g">${plus(bM.inc)}</div></div>
+      <div class="row"><div class="k">В копилки (15%)</div><div class="v r">${minus(bM.toTax + bM.toPig)}</div></div>
       <div class="row"><div class="k">Расходы</div><div class="v r">${minus(bM.oper)}</div></div>
-      ${bM.fromPig ? `<div class="row"><div class="k">Платежи из копилки</div><div class="v r">${minus(bM.fromPig)}</div></div>` : ''}
-      ${bM.fromTax ? `<div class="row"><div class="k">Налог УСН из фонда</div><div class="v r">${minus(bM.fromTax)}</div></div>` : ''}
       ${bM.payTotal ? `<div class="row"><div class="k">Выплаты партнёрам</div><div class="v r">${minus(bM.payTotal)}</div></div>` : ''}
-      <div class="row total"><div class="k">На конец периода</div><div class="v ${cls(bE.total)}">${money(bE.total)}</div></div>
-    </div>
-    <div class="rows" style="margin-top:4px">
-      <div class="row sub"><div class="k"><span class="dot" style="background:var(--free)"></span>из них свободно</div><div class="v">${money(bE.free)}</div></div>
-      <div class="row sub"><div class="k"><span class="dot" style="background:var(--pig)"></span>копилка 8%</div><div class="v">${money(bE.pig)}</div></div>
-      <div class="row sub"><div class="k"><span class="dot" style="background:var(--tax)"></span>налоговый фонд 7%</div><div class="v">${money(bE.tax)}</div></div>
+      <div class="row total"><div class="k">На конец периода</div><div class="v ${cls(bE.free)}">${money(bE.free)}</div></div>
     </div>
   </div>`;
 
