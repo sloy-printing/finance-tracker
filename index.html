@@ -422,8 +422,9 @@ textarea{resize:vertical;min-height:70px}
           <option value="materials">Материалы</option>
           <option value="equipment">Оборудование</option>
           <option value="rent">Аренда</option>
-          <option value="regular">Регулярные платежи (из копилки)</option>
-          <option value="taxes">Налоги</option>
+          <option value="regular">Из копилки (8% — регулярные платежи)</option>
+          <option value="tax_payment">Из налогового фонда (7% — налоги УСН)</option>
+          <option value="taxes">Налоги (из основного бюджета)</option>
           <option value="other_general">Остальное</option>
           <option value="other_split">Другое</option>
         </select></div>
@@ -552,7 +553,9 @@ const PIGGY_RATE = 0.08; // копилка — только с безналич�
 const USER_LBL = {olga:'Ольга',evgeny:'Евгений',dmitry:'Дмитрий'};
 const CAT_LBL  = {
   materials:'Материалы',equipment:'Оборудование',rent:'Аренда',
-  regular:'Регулярные платежи',taxes:'Налоги',
+  regular:'Из копилки (8%)',
+  tax_payment:'Из налогового фонда (7%)',
+  taxes:'Налоги (из бюджета)',
   other_general:'Остальное',other_split:'Другое'
 };
 const MO_FULL = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
@@ -609,14 +612,18 @@ function calcTotals(rows) {
   const piggy       = round2(tBankInc * PIGGY_RATE);
   const bankNet85   = tBankInc - tax - piggy;
 
-  const bankRegular = bankExp.filter(x => x.category === 'regular');
-  const bankSpl     = bankExp.filter(x => x.category === 'other_split');
-  const bankOper    = bankExp.filter(x => x.category !== 'regular' && x.category !== 'other_split');
+  const bankRegular  = bankExp.filter(x => x.category === 'regular');      // из 8% копилки
+  const bankTaxPay   = bankExp.filter(x => x.category === 'tax_payment');  // из 7% налог. фонда
+  const bankSpl      = bankExp.filter(x => x.category === 'other_split');
+  const bankOper     = bankExp.filter(x =>
+    x.category !== 'regular' && x.category !== 'tax_payment' && x.category !== 'other_split');
 
   const tBankRegular = sum(bankRegular);
+  const tBankTaxPay  = sum(bankTaxPay);
   const tBankOper    = sum(bankOper);
   const bankProfit   = bankNet85 - tBankOper;
-  const piggyBal     = piggy - tBankRegular;
+  const piggyBal     = piggy - tBankRegular;     // остаток 8% фонда за период
+  const taxFundBal   = tax   - tBankTaxPay;      // остаток 7% фонда за период
 
   // ── CASH ──────────────────────────────────────────────
   const tCashInc  = sum(cashInc);
@@ -661,9 +668,10 @@ function calcTotals(rows) {
   return {
     inc, exp, bankInc, cashInc, bankExp, cashExp, spl,
     tBankInc, tax, piggy, bankNet85,
-    bankRegular, tBankRegular, bankOper, tBankOper, bankProfit,
+    bankRegular, tBankRegular, bankTaxPay, tBankTaxPay,
+    bankOper, tBankOper, bankProfit,
     tCashInc, cashOper, tCashOper, cashProfit, tCashExp, cashBal,
-    piggyBal,
+    piggyBal, taxFundBal,
     tInc, tOper, profit, perP, bankPerP, cashPerP,
     evgTot, dmtTot, evgFinal, dmtFinal,
     evgBankW, evgCashW, dmtBankW, dmtCashW,
@@ -964,17 +972,21 @@ function calcCumulativeBalances(rows) {
   // ── BANK ──────────────────────────────────────────────
   const bankInc_r  = rows.filter(x => x.type==='income' && isBank(x));
   const bankExp_r  = rows.filter(x => x.type==='expense' && isBank(x));
-  const bankSpl_r  = bankExp_r.filter(x => x.category==='other_split');
-  const bankOper_r = bankExp_r.filter(x => x.category!=='regular' && x.category!=='other_split');
-  const bankReg_r  = bankExp_r.filter(x => x.category==='regular');
+  const bankSpl_r    = bankExp_r.filter(x => x.category==='other_split');
+  const bankReg_r    = bankExp_r.filter(x => x.category==='regular');
+  const bankTaxPay_r = bankExp_r.filter(x => x.category==='tax_payment');
+  const bankOper_r   = bankExp_r.filter(x =>
+    x.category!=='regular' && x.category!=='tax_payment' && x.category!=='other_split');
 
-  const tBankInc  = sum(bankInc_r);
-  const tax       = round2(tBankInc * TAX_RATE);
-  const piggy     = round2(tBankInc * PIGGY_RATE);
-  const tBankOper = sum(bankOper_r);
-  const tBankReg  = sum(bankReg_r);
-  const bankProfit= tBankInc - tax - piggy - tBankOper; // прибыль счёт до выплат
-  const piggyBal  = piggy - tBankReg;
+  const tBankInc    = sum(bankInc_r);
+  const tax         = round2(tBankInc * TAX_RATE);
+  const piggy       = round2(tBankInc * PIGGY_RATE);
+  const tBankOper   = sum(bankOper_r);
+  const tBankReg    = sum(bankReg_r);
+  const tBankTaxPay = sum(bankTaxPay_r);
+  const bankProfit  = tBankInc - tax - piggy - tBankOper; // прибыль счёт до выплат
+  const piggyBal    = piggy - tBankReg;        // остаток 8% фонда нарастающим
+  const taxFundBal  = tax   - tBankTaxPay;     // остаток 7% фонда нарастающим
 
   const evgBankW  = sum(bankSpl_r.filter(x => x.split_person==='evgeny'));
   const dmtBankW  = sum(bankSpl_r.filter(x => x.split_person==='dmitry'));
@@ -1006,7 +1018,7 @@ function calcCumulativeBalances(rows) {
   const dmtCashFinal = cashPerP - dmtCashW;
 
   return {
-    bankBal, cashBal, piggyBal,
+    bankBal, cashBal, piggyBal, taxFundBal,
     bankProfit, cashProfit, totalProfit,
     bankPerP, cashPerP,
     evgBankW, evgCashW, dmtBankW, dmtCashW,
@@ -1050,7 +1062,8 @@ function buildReport(rows, cum) {
     <div class="scard si"><div class="scard-lbl">Приход (счёт)</div><div class="scard-val">${fmt(t.tBankInc)} р.</div></div>
     <div class="scard se"><div class="scard-lbl">Расходы (счёт)</div><div class="scard-val">${fmt(t.tBankOper)} р.</div></div>
     <div class="scard st"><div class="scard-lbl">Налог УСН (7%)</div><div class="scard-val">${fmt(t.tax)} р.</div></div>
-    <div class="scard sx"><div class="scard-lbl">Копилка (8%)</div><div class="scard-val">${fmt(t.piggy)} р.</div></div>
+    <div class="scard sx"><div class="scard-lbl">Копилка 8%</div><div class="scard-val">${fmt(t.piggy)} р.</div></div>
+    <div class="scard sx" style="background:var(--amber-bg)"><div class="scard-lbl" style="color:var(--amber)">Нал. фонд 7%</div><div class="scard-val">${fmt(t.tax)} р.</div></div>
     <div class="scard sn" style="grid-column:span 2"><div class="scard-lbl">Доход к использованию (85%)</div><div class="scard-val">${fmt(t.bankNet85)} р.</div></div>
   </div>`;
 
@@ -1145,13 +1158,22 @@ function buildReport(rows, cum) {
     </div>`;
   }
 
-  // ── КОПИЛКА ───────────────────────────────────────────
+  // ── КОПИЛКА 8% ────────────────────────────────────────
   const pbC = t.piggyBal >= 0 ? 'var(--teal)' : 'var(--expense)';
   h += `<div class="piggy-block">
-    <div class="piggy-hdr">Копилка — регулярные платежи (8% от безналичных приходов)</div>
+    <div class="piggy-hdr">Копилка — 8% от безналичных приходов</div>
     <div class="piggy-row"><span class="piggy-name">Начислено</span><span class="piggy-amt" style="color:var(--teal)">+${fmt(t.piggy)} р.</span></div>
-    ${t.tBankRegular>0?`<div class="piggy-row"><span class="piggy-name">Регулярные платежи</span><span class="piggy-amt" style="color:var(--expense)">−${fmt(t.tBankRegular)} р.</span></div>`:''}
-    <div class="piggy-row"><span class="piggy-name">Остаток копилки за период</span><span class="piggy-amt" style="color:${pbC}">${t.piggyBal>=0?'+':''}${fmt(t.piggyBal)} р.</span></div>
+    ${t.tBankRegular>0?`<div class="piggy-row"><span class="piggy-name">Списано (регулярные платежи)</span><span class="piggy-amt" style="color:var(--expense)">−${fmt(t.tBankRegular)} р.</span></div>`:''}
+    <div class="piggy-row"><span class="piggy-name">Остаток за период</span><span class="piggy-amt" style="color:${pbC}">${t.piggyBal>=0?'+':''}${fmt(t.piggyBal)} р.</span></div>
+  </div>`;
+
+  // ── НАЛОГОВЫЙ ФОНД 7% ─────────────────────────────────
+  const tfC = t.taxFundBal >= 0 ? 'var(--amber)' : 'var(--expense)';
+  h += `<div class="piggy-block" style="background:var(--amber-bg);border-color:#fcd34d">
+    <div class="piggy-hdr" style="color:var(--amber)">Налоговый фонд — 7% от безналичных приходов</div>
+    <div class="piggy-row" style="border-color:#fcd34d"><span class="piggy-name">Начислено</span><span class="piggy-amt" style="color:var(--amber)">+${fmt(t.tax)} р.</span></div>
+    ${t.tBankTaxPay>0?`<div class="piggy-row" style="border-color:#fcd34d"><span class="piggy-name">Списано (налог УСН)</span><span class="piggy-amt" style="color:var(--expense)">−${fmt(t.tBankTaxPay)} р.</span></div>`:''}
+    <div class="piggy-row" style="border-color:#fcd34d"><span class="piggy-name">Остаток за период</span><span class="piggy-amt" style="color:${tfC}">${t.taxFundBal>=0?'+':''}${fmt(t.taxFundBal)} р.</span></div>
   </div>`;
 
   // ── СПИСКИ ОПЕРАЦИЙ ───────────────────────────────────
@@ -1215,6 +1237,7 @@ function showDailyReport() {
     <div class="drep-row"><span class="drep-lbl">Приход</span><span class="drep-val g">+${fmt(t.tBankInc)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">Налог УСН (7%)</span><span class="drep-val r">−${fmt(t.tax)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">В копилку (8%)</span><span class="drep-val o">−${fmt(t.piggy)} р.</span></div>
+    <div class="drep-row"><span class="drep-lbl">В нал. фонд (7%)</span><span class="drep-val o">−${fmt(t.tax)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">Доход к использованию (85%)</span><span class="drep-val">${fmt(t.bankNet85)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">Расходы (счёт)</span><span class="drep-val r">−${fmt(t.tBankOper)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">Прибыль (счёт)</span><span class="drep-val ${t.bankProfit>=0?'g':'r'}">${t.bankProfit>=0?'+':''}${fmt(t.bankProfit)} р.</span></div>
@@ -1235,10 +1258,15 @@ function showDailyReport() {
     <div class="drep-row"><span class="drep-lbl">Дмитрий (счёт)</span><span class="drep-val b">${(cum?.dmtBankFinal??t.dmtBankFinal)>=0?'+':''}${fmt(cum?.dmtBankFinal??t.dmtBankFinal)} р.</span></div>
     <div class="drep-row"><span class="drep-lbl">Дмитрий (касса)</span><span class="drep-val b">${(cum?.dmtCashFinal??t.dmtCashFinal)>=0?'+':''}${fmt(cum?.dmtCashFinal??t.dmtCashFinal)} р.</span></div>
 
-    <div class="drep-sec-hdr">Копилка (регулярные платежи)</div>
-    <div class="drep-row"><span class="drep-lbl">Начислено в копилку</span><span class="drep-val o">+${fmt(t.piggy)} р.</span></div>
-    ${t.tBankRegular>0?`<div class="drep-row"><span class="drep-lbl">Потрачено (регулярные)</span><span class="drep-val r">−${fmt(t.tBankRegular)} р.</span></div>`:`<div class="drep-row"><span class="drep-lbl">Потрачено (регулярные)</span><span class="drep-val">0 р.</span></div>`}
-    <div class="drep-row"><span class="drep-lbl">Остаток копилки</span><span class="drep-val o">${t.piggyBal>=0?'+':''}${fmt(t.piggyBal)} р.</span></div>
+    <div class="drep-sec-hdr">Копилка 8% (регулярные платежи)</div>
+    <div class="drep-row"><span class="drep-lbl">Начислено</span><span class="drep-val o">+${fmt(t.piggy)} р.</span></div>
+    ${t.tBankRegular>0?`<div class="drep-row"><span class="drep-lbl">Списано (регулярные)</span><span class="drep-val r">−${fmt(t.tBankRegular)} р.</span></div>`:`<div class="drep-row"><span class="drep-lbl">Списано</span><span class="drep-val">0 р.</span></div>`}
+    <div class="drep-row"><span class="drep-lbl">Остаток 8%</span><span class="drep-val o">${t.piggyBal>=0?'+':''}${fmt(t.piggyBal)} р.</span></div>
+
+    <div class="drep-sec-hdr">Налоговый фонд 7% (налог УСН)</div>
+    <div class="drep-row"><span class="drep-lbl">Начислено</span><span class="drep-val o">+${fmt(t.tax)} р.</span></div>
+    ${t.tBankTaxPay>0?`<div class="drep-row"><span class="drep-lbl">Списано (налог УСН)</span><span class="drep-val r">−${fmt(t.tBankTaxPay)} р.</span></div>`:`<div class="drep-row"><span class="drep-lbl">Списано</span><span class="drep-val">0 р.</span></div>`}
+    <div class="drep-row"><span class="drep-lbl">Остаток 7%</span><span class="drep-val o">${t.taxFundBal>=0?'+':''}${fmt(t.taxFundBal)} р.</span></div>
   </div>`;
 
   // ── ОПЕРАЦИИ ПО ДНЯМ ───────────────────────────────────────────
@@ -1312,7 +1340,9 @@ function updateCumTiles(cum) {
   };
   setT('hBalance', cum.bankBal,  'var(--income-acc)');
   setT('hCash',    cum.cashBal,  '#fbbf24');
-  setT('hPiggy',   cum.piggyBal, '#fbbf24');
+  // Копилка в шапке = сумма обоих фондов (8% + 7%)
+  const totalFunds = (cum.piggyBal || 0) + (cum.taxFundBal || 0);
+  setT('hPiggy', totalFunds, '#fbbf24');
 }
 
 // ══════════════════════════════════════
